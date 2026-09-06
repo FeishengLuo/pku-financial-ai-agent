@@ -1,0 +1,47 @@
+[
+  {
+    "claim_id": "GH_005",
+    "source": "green_harmonic_2024_annual_report.pdf（巨潮资讯网 https://static.cninfo.com.cn/finalpage/2025-04-30/1223423684.PDF）",
+    "locator": "第37页（第三节 管理层讨论与分析）",
+    "excerpt": "公司近三年的综合毛利率分别为 48.69%、41.14%和 37.54%，处于相对较高水平。",
+    "caliber": "合并报表口径，综合毛利率=（营业收入-营业成本）/营业收入；2024年37.54%较2023年41.14%下降3.60个百分点",
+    "verifier": "经济金融组复核",
+    "evidence_level": "official_filing"
+  },
+  {
+    "claim_id": "GH_006",
+    "source": "green_harmonic_2025_annual_report.pdf（巨潮资讯网 https://static.cninfo.com.cn/finalpage/2026-04-23/1225149955.PDF）",
+    "locator": "第7页（第二节 公司简介和主要财务指标）",
+    "excerpt": "经常性损益的净利润较上年同期分别增长 47.31%、137.48%、121.42%、115.19%",
+    "caliber": "合并报表口径，归属于上市公司股东的净利润同比增长121.42%；营业收入同比增长47.31%",
+    "verifier": "经济金融组复核",
+    "evidence_level": "official_filing"
+  },
+  {
+    "claim_id": "BK_002",
+    "source": "buke_2024_annual_report.pdf（新浪财经文件服务器转存上交所披露 http://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESH_STOCK/2025/2025-4/2025-04-25/10962008.PDF）",
+    "locator": "第14页（第三节 管理层讨论与分析·主营业务分行业情况）",
+    "excerpt": "2024 年，公司机器人行业实现销售收入 21,242.55 万元，同比增长 12.26%。",
+    "caliber": "合并报表口径，机器人行业销售收入21,242.55万元≈2.12亿元",
+    "verifier": "经济金融组复核",
+    "evidence_level": "official_filing"
+  },
+  {
+    "claim_id": "BK_005",
+    "source": "buke_2025_halfyear_report.pdf（新浪财经文件服务器转存上交所披露 http://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESH_STOCK/2025/2025-8/2025-08-29/11403146.PDF）",
+    "locator": "第13页（第三节 管理层讨论与分析·主要财务数据变动）",
+    "excerpt": "公司股东的净利润 2,611.01 万元，较上年同期增长 13.58%；扣除股份支付影响后归属于上市公司股东的净利润 3,602.56 万元，较上年同期增长 42.27%。",
+    "caliber": "2025年半年度合并报表口径，归属于上市公司股东的净利润2,611.01万元（+13.58%）；扣除股份支付影响后3,602.56万元（+42.27%）",
+    "verifier": "经济金融组复核",
+    "evidence_level": "official_filing"
+  },
+  {
+    "claim_id": "SH_006",
+    "source": "shuanghuan_2024_annual_report.pdf（新浪财经文件服务器转存深交所披露 http://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESZ_STOCK/2025/2025-4/2025-04-25/10973440.PDF）",
+    "locator": "第7页（第二节 公司简介和主要财务指标·主要会计数据）",
+    "excerpt": "损益的净利润（元） 1,023,911,091.96 816,407,328.54 25.42% 582,085,021.77",
+    "caliber": "合并报表口径，2024年归属于上市公司股东的净利润1,023,911,091.96元≈10.24亿元，同比增长25.42%",
+    "verifier": "经济金融组复核",
+    "evidence_level": "official_filing"
+  }
+]

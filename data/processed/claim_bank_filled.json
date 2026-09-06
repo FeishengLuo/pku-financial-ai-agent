@@ -12,7 +12,10 @@
     "claim_type": "技术性能",
     "verification_status": "待验证",
     "confidence": 0.6,
-    "definition_issues": ["同等出力的测试条件未明确", "减重对象是否包含电机/减速器整体未明确"],
+    "definition_issues": [
+      "同等出力的测试条件未明确",
+      "减重对象是否包含电机/减速器整体未明确"
+    ],
     "evidence_list": [],
     "notes": "需核对：是单个减速器减重还是关节模组整体减重？基准型号是什么？"
   },
@@ -46,7 +49,10 @@
     "claim_type": "产能/需求",
     "verification_status": "待验证",
     "confidence": 0.7,
-    "definition_issues": ["50万台是设计产能还是实际达产产能？", "是否包含谐波减速器及机电一体化产品？"],
+    "definition_issues": [
+      "50万台是设计产能还是实际达产产能？",
+      "是否包含谐波减速器及机电一体化产品？"
+    ],
     "evidence_list": [],
     "notes": "需在公司年报/募投公告中查找确切表述"
   },
@@ -63,7 +69,10 @@
     "claim_type": "客户/订单",
     "verification_status": "待验证",
     "confidence": 0.6,
-    "definition_issues": ["具体客户名称未披露", "核心供应商的界定标准未明确"],
+    "definition_issues": [
+      "具体客户名称未披露",
+      "核心供应商的界定标准未明确"
+    ],
     "evidence_list": [],
     "notes": "需通过客户公告或供应链调研确认具体企业名称"
   },
@@ -81,7 +90,18 @@
     "verification_status": "已验证",
     "confidence": 0.95,
     "definition_issues": [],
-    "evidence_list": [],
+    "evidence_list": [
+      {
+        "source": "green_harmonic_2024_annual_report.pdf（巨潮资讯网 https://static.cninfo.com.cn/finalpage/2025-04-30/1223423684.PDF）",
+        "locator": "第37页（第三节 管理层讨论与分析）",
+        "excerpt": "公司近三年的综合毛利率分别为 48.69%、41.14%和 37.54%，处于相对较高水平。",
+        "caliber": "合并报表口径，综合毛利率=（营业收入-营业成本）/营业收入；2024年37.54%较2023年41.14%下降3.60个百分点",
+        "verifier": "经济金融组复核",
+        "verified_at": "2026-09-06",
+        "evidence_level": "official_filing",
+        "fingerprint": "5d831f3e36c9b085"
+      }
+    ],
     "notes": "年报直接可验证"
   },
   {
@@ -98,7 +118,18 @@
     "verification_status": "已验证",
     "confidence": 0.95,
     "definition_issues": [],
-    "evidence_list": [],
+    "evidence_list": [
+      {
+        "source": "green_harmonic_2025_annual_report.pdf（巨潮资讯网 https://static.cninfo.com.cn/finalpage/2026-04-23/1225149955.PDF）",
+        "locator": "第7页（第二节 公司简介和主要财务指标）",
+        "excerpt": "经常性损益的净利润较上年同期分别增长 47.31%、137.48%、121.42%、115.19%",
+        "caliber": "合并报表口径，归属于上市公司股东的净利润同比增长121.42%；营业收入同比增长47.31%",
+        "verifier": "经济金融组复核",
+        "verified_at": "2026-09-06",
+        "evidence_level": "official_filing",
+        "fingerprint": "700be65362c396fd"
+      }
+    ],
     "notes": "年报直接可验证"
   },
   {
@@ -114,7 +145,10 @@
     "claim_type": "技术性能",
     "verification_status": "待验证",
     "confidence": 0.75,
-    "definition_issues": ["额定扭矩范围对应不同减速比", "测试条件未说明"],
+    "definition_issues": [
+      "额定扭矩范围对应不同减速比",
+      "测试条件未说明"
+    ],
     "evidence_list": [],
     "notes": " torque density 约 20.4-52 Nm/kg；需与官网 datasheet 核对"
   },
@@ -131,7 +165,10 @@
     "claim_type": "产能/需求",
     "verification_status": "待验证",
     "confidence": 0.7,
-    "definition_issues": ["统计口径为累计出货还是年度出货？", "TOP2的统计范围和时间点未明确"],
+    "definition_issues": [
+      "统计口径为累计出货还是年度出货？",
+      "TOP2的统计范围和时间点未明确"
+    ],
     "evidence_list": [],
     "notes": "需核对蓝皮书原文"
   },
@@ -149,7 +186,18 @@
     "verification_status": "已验证",
     "confidence": 0.95,
     "definition_issues": [],
-    "evidence_list": [],
+    "evidence_list": [
+      {
+        "source": "buke_2024_annual_report.pdf（新浪财经文件服务器转存上交所披露 http://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESH_STOCK/2025/2025-4/2025-04-25/10962008.PDF）",
+        "locator": "第14页（第三节 管理层讨论与分析·主营业务分行业情况）",
+        "excerpt": "2024 年，公司机器人行业实现销售收入 21,242.55 万元，同比增长 12.26%。",
+        "caliber": "合并报表口径，机器人行业销售收入21,242.55万元≈2.12亿元",
+        "verifier": "经济金融组复核",
+        "verified_at": "2026-09-06",
+        "evidence_level": "official_filing",
+        "fingerprint": "efbd91bdba645ea4"
+      }
+    ],
     "notes": "年报直接可验证"
   },
   {
@@ -165,7 +213,10 @@
     "claim_type": "技术性能",
     "verification_status": "待验证",
     "confidence": 0.6,
-    "definition_issues": ["同尺寸的具体型号未明确", "22%是额定扭矩还是峰值扭矩？"],
+    "definition_issues": [
+      "同尺寸的具体型号未明确",
+      "22%是额定扭矩还是峰值扭矩？"
+    ],
     "evidence_list": [],
     "notes": "需官网 datasheet 或产品手册验证"
   },
@@ -182,7 +233,10 @@
     "claim_type": "客户/订单",
     "verification_status": "待验证",
     "confidence": 0.5,
-    "definition_issues": ["客户名称未披露", "全球知名品牌的具体定义未明确"],
+    "definition_issues": [
+      "客户名称未披露",
+      "全球知名品牌的具体定义未明确"
+    ],
     "evidence_list": [],
     "notes": "需通过公司投资者交流或供应链调研确认客户"
   },
@@ -200,7 +254,18 @@
     "verification_status": "已验证",
     "confidence": 0.95,
     "definition_issues": [],
-    "evidence_list": [],
+    "evidence_list": [
+      {
+        "source": "buke_2025_halfyear_report.pdf（新浪财经文件服务器转存上交所披露 http://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESH_STOCK/2025/2025-8/2025-08-29/11403146.PDF）",
+        "locator": "第13页（第三节 管理层讨论与分析·主要财务数据变动）",
+        "excerpt": "公司股东的净利润 2,611.01 万元，较上年同期增长 13.58%；扣除股份支付影响后归属于上市公司股东的净利润 3,602.56 万元，较上年同期增长 42.27%。",
+        "caliber": "2025年半年度合并报表口径，归属于上市公司股东的净利润2,611.01万元（+13.58%）；扣除股份支付影响后3,602.56万元（+42.27%）",
+        "verifier": "经济金融组复核",
+        "verified_at": "2026-09-06",
+        "evidence_level": "official_filing",
+        "fingerprint": "da031a60fc3634c1"
+      }
+    ],
     "notes": "半年报直接可验证"
   },
   {
@@ -216,7 +281,10 @@
     "claim_type": "产能/需求",
     "verification_status": "待验证",
     "confidence": 0.8,
-    "definition_issues": ["GGII统计口径未披露", "是否包含所有应用场景的RV减速器？"],
+    "definition_issues": [
+      "GGII统计口径未披露",
+      "是否包含所有应用场景的RV减速器？"
+    ],
     "evidence_list": [],
     "notes": "招股书直接可验证"
   },
@@ -233,7 +301,10 @@
     "claim_type": "技术性能",
     "verification_status": "待验证",
     "confidence": 0.75,
-    "definition_issues": ["额定扭矩范围对应不同减速比", "扭矩密度约23.4-49.1 Nm/kg，与180 Nm/kg目标差距大"],
+    "definition_issues": [
+      "额定扭矩范围对应不同减速比",
+      "扭矩密度约23.4-49.1 Nm/kg，与180 Nm/kg目标差距大"
+    ],
     "evidence_list": [],
     "notes": "需与官网/ datasheet 核对；注意180 Nm/kg可能是不同型号或测试条件"
   },
@@ -266,7 +337,10 @@
     "claim_type": "客户/订单",
     "verification_status": "待验证",
     "confidence": 0.8,
-    "definition_issues": ["覆盖是否意味着批量供货？", "各客户收入占比未披露"],
+    "definition_issues": [
+      "覆盖是否意味着批量供货？",
+      "各客户收入占比未披露"
+    ],
     "evidence_list": [],
     "notes": "招股书直接可验证"
   },
@@ -283,7 +357,9 @@
     "claim_type": "产能/需求",
     "verification_status": "待验证",
     "confidence": 0.8,
-    "definition_issues": ["产能利用率>100%意味着超负荷生产或产能统计口径问题"],
+    "definition_issues": [
+      "产能利用率>100%意味着超负荷生产或产能统计口径问题"
+    ],
     "evidence_list": [],
     "notes": "需核对招股书产能统计口径"
   },
@@ -301,7 +377,18 @@
     "verification_status": "已验证",
     "confidence": 0.95,
     "definition_issues": [],
-    "evidence_list": [],
+    "evidence_list": [
+      {
+        "source": "shuanghuan_2024_annual_report.pdf（新浪财经文件服务器转存深交所披露 http://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESZ_STOCK/2025/2025-4/2025-04-25/10973440.PDF）",
+        "locator": "第7页（第二节 公司简介和主要财务指标·主要会计数据）",
+        "excerpt": "损益的净利润（元） 1,023,911,091.96 816,407,328.54 25.42% 582,085,021.77",
+        "caliber": "合并报表口径，2024年归属于上市公司股东的净利润1,023,911,091.96元≈10.24亿元，同比增长25.42%",
+        "verifier": "经济金融组复核",
+        "verified_at": "2026-09-06",
+        "evidence_level": "official_filing",
+        "fingerprint": "facef687bd8ef695"
+      }
+    ],
     "notes": "年报直接可验证"
   },
   {
@@ -317,7 +404,9 @@
     "claim_type": "市场数据",
     "verification_status": "待验证",
     "confidence": 0.8,
-    "definition_issues": ["GGII统计口径未披露"],
+    "definition_issues": [
+      "GGII统计口径未披露"
+    ],
     "evidence_list": [],
     "notes": "作为行业基准数据使用"
   }
