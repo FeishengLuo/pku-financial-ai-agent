@@ -39,10 +39,10 @@
 
 ## P1：P0 完成后推进
 
-- [ ] 实现 `src/engineering_analyzer.py`：统一额定/峰值、连续/峰值工况及电机/模组口径。
-- [ ] 实现 `src/economic_mapper.py` 和 `tech_to_economics_ontology.json`：把工程结论映射为销量、ASP、单位成本、毛利等可审计假设。
-- [ ] 实现 `src/causal_critic.py`：输出替代解释、反事实证据需求和不能归因的部分。
-- [ ] 将 `workflow.py` 扩展为财务影响链路；是否引入 LangGraph 以本地可运行性和依赖成本为准，不作为首版 Demo 的前置条件。
+- [x] 实现 `src/engineering_analyzer.py`：统一额定/峰值、连续/峰值工况及电机/模组口径。（PR #5 待合并）
+- [x] 实现 `src/economic_mapper.py` 和 `tech_to_economics_ontology.json`：把工程结论映射为销量、ASP、单位成本、毛利等可审计假设。（PR #6 待合并；ontology 系数待经济金融成员复核）
+- [x] 实现 `src/causal_critic.py`：输出替代解释、反事实证据需求和不能归因的部分。（PR #7 待合并）
+- [x] 将 `workflow.py` 扩展为财务影响链路；是否引入 LangGraph 以本地可运行性和依赖成本为准，不作为首版 Demo 的前置条件。（PR #8 待合并，纯本地实现，未引入 LangGraph）
 - [ ] 将人工核验后的证据写回 Claim Bank；每条 Claim 至少保留来源、页码/定位、摘录、口径和核验人。
 - [ ] 增加财务模型、证据链、工程映射和 Demo 输出的端到端回归用例。
 
