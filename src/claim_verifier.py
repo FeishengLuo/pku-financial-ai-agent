@@ -316,11 +316,26 @@ class ClaimVerifier:
             output.elapsed_ms = int((time.time() - t_start) * 1000)
             return output
 
+        # ── LLM 配置缺失 → 保守降级为纯规则层结论（对齐 app.py 的保守哲学）──
+        try:
+            llm_config = self.llm_config
+        except RuntimeError as e:
+            output.verdict = rule_result.verdict_override or "abstain"
+            output.verdict_source = "rule_only_fallback"
+            output.confidence = 0.3
+            rule_explain = "; ".join(rule_result.flags)
+            output.reasoning = (
+                f"[规则层] {rule_explain or '未检出确定性问题'}"
+                f" | [LLM] 配置缺失，未执行语义判断: {e}"
+            )
+            output.elapsed_ms = int((time.time() - t_start) * 1000)
+            return output
+
         # ── LLM 层：语义判断 ──
         prompt = PROMPT_TEMPLATE.format(claim=claim, source=source)
         raw, outcome = call_llm(
-            self.llm_config["base_url"],
-            self.llm_config["api_key"],
+            llm_config["base_url"],
+            llm_config["api_key"],
             self.model,
             prompt,
             self.timeout,
