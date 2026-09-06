@@ -6,6 +6,23 @@
 
 ---
 
+## P1 财务影响链路四模块（2026-09-06，PR #5–#8，待合并）
+
+按 TODO P1 实现完整财务影响链路，4 个堆叠 PR（每个只含自己的 diff，按序合并，GitHub 会自动把后续 PR 基址改回 main）：
+
+| PR | 分支 | 内容 | 测试 |
+|---|---|---|---|
+| #5 | feat/engineering-analyzer | `src/engineering_analyzer.py` 工况/口径归一化（额定vs峰值、电机vs模组） | +21 用例 |
+| #6 | feat/economic-mapper | `src/economic_mapper.py` + `data/processed/tech_to_economics_ontology.json` 工程→经济假设可审计映射 | +11 用例 |
+| #7 | feat/causal-critic | `src/causal_critic.py` 因果批判层（替代解释/反事实需求/不可归因/置信度下调） | +28 用例 |
+| #8 | feat/workflow-financial-chain | `run_financial_chain` 全链路（验证门控→工程→经济→批判→财务三情景）+ `claim_verifier` 无 LLM 配置时保守降级修复（原直接崩溃） | +15 用例 |
+
+- 全量 `pytest tests/ -q`：**95 passed**。
+- 待复核：ontology 弹性系数/单位成本初值为估计值，需经济金融成员把关后再用于正式财务模型；数据质量问题（纳博 RV-20E 行疑似填数错误、步科 FMK 缺重量、Y 系列待补充）已在 PR #5 标注。
+- 注：因本机 git 协议连接 GitHub 受限，本次经 GitHub Git Data API 推送。
+
+---
+
 ## 当前工作区同步记录（2026-09-06，StateVerifier 误报修复）
 
 由孙圣尧完成 TODO P0.3（PR #3 review 中认领）：StateVerifier 六条规则层误伤全部归零。
