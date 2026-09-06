@@ -43,8 +43,8 @@
 - [ ] 实现 `src/economic_mapper.py` 和 `tech_to_economics_ontology.json`：把工程结论映射为销量、ASP、单位成本、毛利等可审计假设。
 - [ ] 实现 `src/causal_critic.py`：输出替代解释、反事实证据需求和不能归因的部分。
 - [ ] 将 `workflow.py` 扩展为财务影响链路；是否引入 LangGraph 以本地可运行性和依赖成本为准，不作为首版 Demo 的前置条件。
-- [ ] 将人工核验后的证据写回 Claim Bank；每条 Claim 至少保留来源、页码/定位、摘录、口径和核验人。
-- [ ] 增加财务模型、证据链、工程映射和 Demo 输出的端到端回归用例。
+- [x] 将人工核验后的证据写回 Claim Bank；每条 Claim 至少保留来源、页码/定位、摘录、口径和核验人。—— 写回工具已就绪：`src/claim_bank_writer.py`（五必填字段校验、核验人空则硬拒绝、指纹幂等去重、原子写盘），见分支 `feat/p1-claim-bank-e2e` 的 PR；**真实回填仍需团队用核验后的证据执行**。
+- [x] 增加财务模型、证据链、工程映射和 Demo 输出的端到端回归用例。—— `tests/test_e2e_regression.py` 9 项：财务可复算（2027 base revenue 重算=存储）、输入类型隔离（仅 historical/assumption）、证据链信任分有界性、Demo 五要素、workflow 本地无证据→abstain 路径。
 
 ## P2：证据增强与扩展
 

@@ -6,6 +6,26 @@
 
 ---
 
+## P1 收尾：claim_bank_writer 证据写回 + 端到端回归（分支 feat/p1-claim-bank-e2e）
+
+### 新增
+
+- `src/claim_bank_writer.py` — 人工核验证据写回 Claim Bank 工具：每条证据强制五必填字段（claim_id/source/locator/excerpt/caliber + verifier），核验人字段为空即拒绝写入（`SKIP_EMPTY_VERIFIER` 硬门控）；指纹 `sha256(excerpt||source)[:16]` 幂等去重；先写临时文件再 `os.replace` 原子替换，写前自动 `.bak` 备份不覆盖旧备份；来源分类复用 `evidence_ledger.SOURCE_KEYWORDS`；CLI 支持 `--evidence/--bank/--dry-run`。
+- `tests/test_claim_bank_writer.py` — 25 项测试（字段校验/写回/分类/CLI）。
+- `tests/test_e2e_regression.py` — 9 项端到端回归：财务模型对固定 fixture 可复算（2027 base revenue 重算 = 存储值 4.625）、输入类型隔离（CSV 仅 historical/assumption，无 calculated）、证据链信任分有界性与重复证据不加分、本地 Demo 五要素齐全、workflow 本地路径（空证据→abstain；有证据无 LLM 配置→明确报错）。
+
+### 测试
+
+- 全量 `python -m pytest tests/ -q`：**54 passed**。
+
+### 待团队复核
+
+1. 写回工具需团队提供**核验后**的真实证据才能回填 Claim Bank（工具就绪 ≠ 已回填）。
+2. ontology 系数复核仍在 PR #6 等待团队结论。
+3. `test_e2e_regression.py` 中「有证据无 LLM 配置→RuntimeError」用例为刻意严格回归：若 PR #8 的 rule_only_fallback 合并，此用例需改为断言 fallback 路径。
+
+---
+
 ## 当前工作区同步记录（2026-09-06，StateVerifier 误报修复）
 
 由孙圣尧完成 TODO P0.3（PR #3 review 中认领）：StateVerifier 六条规则层误伤全部归零。
