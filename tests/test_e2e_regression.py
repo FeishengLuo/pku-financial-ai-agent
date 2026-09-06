@@ -148,16 +148,17 @@ class TestWorkflowLocal(unittest.TestCase):
         self.assertIn("confidence", state)
         self.assertIn("报告", state["report"] or state.get("report", ""))
 
-    def test_llm_unavailable_raises(self):
-        """main 契约：有证据但无 LLM 配置 → RuntimeError（由调用方降级）。
+    def test_llm_unavailable_degrades_to_rule_only(self):
+        """main 契约（PR #8 起）：有证据但无 LLM 配置 → 保守降级，不抛异常。
 
-        PR #8 已把此行为改为 claim_verifier 内部保守降级；若 #8 合并后
-        本用例失败，改为断言 verdict_source == 'rule_only_fallback'。
+        claim_verifier 在 LLM 配置缺失时内部降级为纯规则层验证，
+        输出 verdict_source == 'rule_only_fallback'，本地路径不中断。
         """
         if self._has_llm_config():
             self.skipTest("本机存在 LLM 配置，无法测试无配置路径")
-        with self.assertRaises(RuntimeError):
-            run_verification("某公司收入下降30%", "研报指出收入同比下降30%以上")
+        state = run_verification("某公司收入下降30%", "研报指出收入同比下降30%以上")
+        self.assertEqual(state.get("verdict_source"), "rule_only_fallback")
+        self.assertIn(state.get("verdict"), ("support", "partially_supported", "dispute", "abstain"))
 
 
 if __name__ == "__main__":

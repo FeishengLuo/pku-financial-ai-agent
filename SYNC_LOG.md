@@ -6,23 +6,40 @@
 
 ---
 
-## P1 收尾：claim_bank_writer 证据写回 + 端到端回归（分支 feat/p1-claim-bank-e2e）
+## P1 收尾：claim_bank_writer 证据写回 + 端到端回归（2026-09-06，PR #9）
 
 ### 新增
 
 - `src/claim_bank_writer.py` — 人工核验证据写回 Claim Bank 工具：每条证据强制五必填字段（claim_id/source/locator/excerpt/caliber + verifier），核验人字段为空即拒绝写入（`SKIP_EMPTY_VERIFIER` 硬门控）；指纹 `sha256(excerpt||source)[:16]` 幂等去重；先写临时文件再 `os.replace` 原子替换，写前自动 `.bak` 备份不覆盖旧备份；来源分类复用 `evidence_ledger.SOURCE_KEYWORDS`；CLI 支持 `--evidence/--bank/--dry-run`。
 - `tests/test_claim_bank_writer.py` — 25 项测试（字段校验/写回/分类/CLI）。
-- `tests/test_e2e_regression.py` — 9 项端到端回归：财务模型对固定 fixture 可复算（2027 base revenue 重算 = 存储值 4.625）、输入类型隔离（CSV 仅 historical/assumption，无 calculated）、证据链信任分有界性与重复证据不加分、本地 Demo 五要素齐全、workflow 本地路径（空证据→abstain；有证据无 LLM 配置→明确报错）。
+- `tests/test_e2e_regression.py` — 9 项端到端回归：财务模型对固定 fixture 可复算（2027 base revenue 重算 = 存储值 4.625）、输入类型隔离（CSV 仅 historical/assumption，无 calculated）、证据链信任分有界性与重复证据不加分、本地 Demo 五要素齐全、workflow 本地路径（空证据→abstain；有证据无 LLM 配置→保守降级 `rule_only_fallback`，已按 PR #8 新契约改写原 RuntimeError 断言）。
 
 ### 测试
 
-- 全量 `python -m pytest tests/ -q`：**54 passed**。
+- 全量 `python -m pytest tests/ -q`：**129 passed**（#5–#8 合并内容 + 本 PR）。
 
 ### 待团队复核
 
 1. 写回工具需团队提供**核验后**的真实证据才能回填 Claim Bank（工具就绪 ≠ 已回填）。
-2. ontology 系数复核仍在 PR #6 等待团队结论。
-3. `test_e2e_regression.py` 中「有证据无 LLM 配置→RuntimeError」用例为刻意严格回归：若 PR #8 的 rule_only_fallback 合并，此用例需改为断言 fallback 路径。
+2. ontology 系数复核仍在等待团队结论。
+
+---
+
+## P1 财务影响链路四模块（2026-09-06，PR #5–#8，已合并；经 PR #10 恢复）
+
+按 TODO P1 实现完整财务影响链路，4 个堆叠 PR（每个只含自己的 diff，按序合并，GitHub 会自动把后续 PR 基址改回 main）：
+
+| PR | 分支 | 内容 | 测试 |
+|---|---|---|---|
+| #5 | feat/engineering-analyzer | `src/engineering_analyzer.py` 工况/口径归一化（额定vs峰值、电机vs模组） | +21 用例 |
+| #6 | feat/economic-mapper | `src/economic_mapper.py` + `data/processed/tech_to_economics_ontology.json` 工程→经济假设可审计映射 | +11 用例 |
+| #7 | feat/causal-critic | `src/causal_critic.py` 因果批判层（替代解释/反事实需求/不可归因/置信度下调） | +28 用例 |
+| #8 | feat/workflow-financial-chain | `run_financial_chain` 全链路（验证门控→工程→经济→批判→财务三情景）+ `claim_verifier` 无 LLM 配置时保守降级修复（原直接崩溃） | +15 用例 |
+
+- 全量 `pytest tests/ -q`：**95 passed**。
+- 待复核：ontology 弹性系数/单位成本初值为估计值，需经济金融成员把关后再用于正式财务模型；数据质量问题（纳博 RV-20E 行疑似填数错误、步科 FMK 缺重量、Y 系列待补充）已在 PR #5 标注。
+- 注：因本机 git 协议连接 GitHub 受限，本次经 GitHub Git Data API 推送。
+- 恢复记录：main 曾意外回退至 #5 合并点（f97537b），导致 #6–#8 内容不在 main 中（PR 状态仍显示 MERGED）；经 **PR #10** 将 #8 合并点（24ad46e，含全部 #5–#8 内容）重新合入，现已恢复，合并后全量 **129 passed**。
 
 ---
 
