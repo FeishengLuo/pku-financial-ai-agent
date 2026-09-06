@@ -353,7 +353,14 @@ def _financial_chain_verification(
     if not local_only:
         try:
             state = run_verification(claim, source, model)
-            state["verification_path"] = "full"
+            # claim_verifier 在 LLM 配置缺失时自身降级（verdict_source=rule_only_fallback）
+            llm_skipped = state.get("verdict_source") == "rule_only_fallback"
+            if llm_skipped:
+                errors.append({
+                    "stage": "verification",
+                    "error": "LLM 验证配置缺失，claim_verifier 已降级为纯规则层验证",
+                })
+            state["verification_path"] = "rule_only" if llm_skipped else "full"
             return state
         except RuntimeError as exc:
             # LLM 网关配置缺失（load_prism_config 抛 RuntimeError）→ 本地降级
