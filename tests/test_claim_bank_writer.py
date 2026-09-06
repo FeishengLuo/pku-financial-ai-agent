@@ -133,13 +133,15 @@ class TestWriteback:
         shutil.copy(REAL_BANK, real_copy)
         bank_before = json.loads(real_copy.read_text(encoding="utf-8"))
         real_id = bank_before[0]["claim_id"]
+        evidence_before = len(bank_before[0]["evidence_list"])
         report = writeback([make_record(claim_id=real_id)], real_copy)
         assert report["written"] == 1
         bank_after = json.loads(real_copy.read_text(encoding="utf-8"))
         assert len(bank_after) == len(bank_before) == 19
         changed = [c for c in bank_after if c["claim_id"] == real_id]
         assert len(changed) == 1
-        assert len(changed[0]["evidence_list"]) == 1
+        # 真实 bank 的 claim 可能已带核验证据，断言只新增 1 条而非总数固定
+        assert len(changed[0]["evidence_list"]) == evidence_before + 1
 
 
 class TestClassify:
