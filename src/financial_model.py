@@ -311,6 +311,136 @@ def run_all_scenarios(inputs: FinancialModelInputs) -> Dict[str, Dict[str, Any]]
     return {name: run_model(inputs, name) for name in SCENARIOS}
 
 
+def _ev_at_volume_multiplier(
+    inputs: FinancialModelInputs,
+    volume_multiplier: float,
+    years: Sequence[int],
+) -> float:
+    """在 base 情景其余参数不变、仅销量统一缩放 volume_multiplier 时的 EV。
+
+    独立实现（不复用 SCENARIOS），保证反向求解不改变正向情景的定义。
+    """
+    inputs.validate(years)
+    projections: List[Dict[str, Any]] = []
+    previous_nwc = 0.0
+    for year in years:
+        harmonic_units = inputs.value("harmonic_units_wan", year) * volume_multiplier
+        joint_units = inputs.value("joint_units_wan", year) * volume_multiplier
+        harmonic_asp = inputs.value("harmonic_asp_yuan", year)
+        joint_asp = inputs.value("joint_asp_yuan", year)
+        harmonic_cost = inputs.value("harmonic_unit_cost_yuan", year)
+        joint_cost = inputs.value("joint_unit_cost_yuan", year)
+
+        harmonic_revenue = _money_from_units(harmonic_units, harmonic_asp)
+        joint_revenue = _money_from_units(joint_units, joint_asp)
+        harmonic_cogs = _money_from_units(harmonic_units, harmonic_cost)
+        joint_cogs = _money_from_units(joint_units, joint_cost)
+        revenue = harmonic_revenue + joint_revenue
+        cogs = harmonic_cogs + joint_cogs
+        gross_profit = revenue - cogs
+
+        opex = revenue * (
+            inputs.value("selling_expense_rate", year)
+            + inputs.value("admin_expense_rate", year)
+            + inputs.value("rd_expense_rate", year)
+        )
+        ebitda = gross_profit - opex
+        depreciation = revenue * inputs.value("depreciation_rate", year)
+        ebit = ebitda - depreciation
+        tax = max(ebit, 0.0) * inputs.value("tax_rate", year)
+        nopat = ebit - tax
+        capex = revenue * inputs.value("capex_rate", year)
+        nwc = revenue * inputs.value("nwc_rate", year)
+        change_nwc = nwc - previous_nwc
+        fcf = nopat + depreciation - capex - change_nwc
+        previous_nwc = nwc
+        projections.append({"year": year, "revenue_bn": revenue, "fcf_bn": fcf})
+
+    discount_rate = inputs.value("discount_rate", "valuation")
+    terminal_growth = inputs.value("terminal_growth_rate", "valuation")
+    discounted_fcfs = [
+        p["fcf_bn"] / ((1 + discount_rate) ** i)
+        for i, p in enumerate(projections, start=1)
+    ]
+    terminal_value = (
+        projections[-1]["fcf_bn"] * (1 + terminal_growth)
+        / (discount_rate - terminal_growth)
+    )
+    discounted_terminal = terminal_value / ((1 + discount_rate) ** len(projections))
+    return sum(discounted_fcfs) + discounted_terminal
+
+
+def reverse_dcf(
+    inputs: FinancialModelInputs,
+    target_ev_bn: float,
+    years: Sequence[int] = FORECAST_YEARS,
+) -> Dict[str, Any]:
+    """反向 DCF：给定目标企业价值，反推模型需要的销量倍数与隐含增长。
+
+    用途：把"模型 EV 与市场市值的差距"从口径争议变成可量化输出——
+    市场隐含的预期增长 vs 可验证证据支持的增长假设，并排列出。
+
+    方法：EV 随销量倍数单调递增（在合理区间内），对
+    volume_multiplier ∈ [lo, hi] 做 60 轮二分求解 EV(m) = target_ev_bn。
+    """
+    if target_ev_bn <= 0:
+        raise ValueError("target_ev_bn 必须为正数")
+    inputs.validate(years)
+
+    lo, hi = 0.05, 50.0
+    ev_lo = _ev_at_volume_multiplier(inputs, lo, years)
+    ev_hi = _ev_at_volume_multiplier(inputs, hi, years)
+    if not (ev_lo <= target_ev_bn <= ev_hi):
+        raise ValueError(
+            f"目标 EV {target_ev_bn:.4f} bn 超出可解区间 "
+            f"[{ev_lo:.4f}, {ev_hi:.4f}] bn（销量倍数 {lo}–{hi}）"
+        )
+
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if _ev_at_volume_multiplier(inputs, mid, years) < target_ev_bn:
+            lo = mid
+        else:
+            hi = mid
+    implied_multiplier = (lo + hi) / 2
+
+    base_run = run_model(inputs, "base", years)
+    base_2027_units = (
+        inputs.value("harmonic_units_wan", years[-1])
+        + inputs.value("joint_units_wan", years[-1])
+    )
+    implied_2027_units = base_2027_units * implied_multiplier
+    base_ev = base_run["valuation"]["enterprise_value_bn"]
+    scenarios = run_all_scenarios(inputs)
+    scenario_evs = {
+        name: r["valuation"]["enterprise_value_bn"] for name, r in scenarios.items()
+    }
+
+    return _round_values({
+        "model_name": "reverse_dcf_implied_expectations",
+        "model_status": "prototype_scenario_not_investment_recommendation",
+        "target_ev_bn": target_ev_bn,
+        "implied_volume_multiplier": implied_multiplier,
+        "ev_at_implied_multiplier_bn": _ev_at_volume_multiplier(
+            inputs, implied_multiplier, years),
+        "implied_2027_total_units_wan": implied_2027_units,
+        "base_case": {
+            "ev_bn": base_ev,
+            "2027_total_units_wan": base_2027_units,
+        },
+        "scenario_evs_bn": scenario_evs,
+        "gap_vs_target_pct": {
+            name: round((ev / target_ev_bn - 1) * 100, 2)
+            for name, ev in scenario_evs.items()
+        },
+        "interpretation": (
+            "implied_volume_multiplier 是使 DCF EV 等于目标 EV 所需的销量缩放倍数；"
+            "倍数 >1 表示目标价格隐含的销量预期高于 base 假设。"
+            "差距本身不判定对错：市值含叙事/期权成分，模型只计证据支持的基本面。"
+        ),
+    })
+
+
 def export_json(results: Mapping[str, Dict[str, Any]], path: Path | str) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
