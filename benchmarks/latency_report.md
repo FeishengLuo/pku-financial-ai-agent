@@ -1,6 +1,6 @@
 # C7 效率基准：本地全链路延迟
 
-> 生成：`python scripts/benchmark_latency.py --n 3`
+> 生成：`python scripts/benchmark_latency.py --n 30`
 > 链路：Claim → 验证 → 工程归一化 → 经济映射 → 因果批判 → 财务三情景
 > 模式：`local_only=True`（无 LLM、无网络），与 `python app.py` Demo 同链路
 
@@ -8,12 +8,12 @@
 
 | 指标 | 值 |
 |---|---|
-| 样本量 N | 3（另计预热 1 次 5.6 ms） |
-| p50 | **4.2 ms** |
-| p95 | 4.3 ms |
-| min | 4.1 ms |
-| max | 4.3 ms |
-| mean ± stdev | 4.2 ± 0.1 ms |
+| 样本量 N | 30（另计预热 1 次 5.7 ms） |
+| p50 | **4.3 ms** |
+| p95 | 5.0 ms |
+| min | 3.9 ms |
+| max | 5.0 ms |
+| mean ± stdev | 4.3 ± 0.3 ms |
 
 ## 环境
 

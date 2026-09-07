@@ -22,7 +22,7 @@ Claim2Value（Evidence-Grounded Engineering-to-Finance Agent）面向产业链�
 
 **3. 反向 DCF 视角（PR #19）**：以 2026-09-04 市值 512.96 亿元反推，绿的谐波现价隐含销量倍数 **8.54×**；三情景下市价与内在价值 gap 为 **-88.29% / -83.14% / -93.73%**——"以价换量"放量逻辑与 365 倍 PE 期权定价并存的现象被量化呈现。
 
-**4. 工程性能（PR #18）**：规则链延迟基准 N=30 实测 **p50 3.9ms / p95 4.6ms**（`scripts/benchmark_latency.py`，报告 `benchmarks/latency_report.md`）。
+**4. 工程性能（PR #18）**：规则链延迟基准 N=30 实测 **p50 4.3ms / p95 5.0ms**（同日三次复测 3.7–4.3ms）（`scripts/benchmark_latency.py`，报告 `benchmarks/latency_report.md`）。
 
 **5. 演示与答辩材料**：`docs/proposal/` 01–09 章成稿（产品、案例、商业论证、路线图、合规、答辩问答预案）；演示脚本（10 章）与路演 PPT 大纲（11 章）在 Phase 3D 补齐。
 

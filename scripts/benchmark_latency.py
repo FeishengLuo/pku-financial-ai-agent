@@ -44,6 +44,8 @@ def run_once(fixture: dict) -> float:
 def main() -> None:
     ap = argparse.ArgumentParser(description="本地全链路延迟基准（无 LLM/无网络）")
     ap.add_argument("--n", type=int, default=30, help="运行次数（默认 30）")
+    ap.add_argument("--out", default=str(OUT),
+                    help="报告输出路径（默认 benchmarks/latency_report.md；测试用临时路径避免覆盖正式报告）")
     args = ap.parse_args()
     if args.n < 3:
         raise SystemExit("--n 至少为 3（第 1 次为预热，不计入统计）")
@@ -92,8 +94,9 @@ def main() -> None:
         "- 单进程串行测量，未模拟并发；如需并发基准需另行设计。",
         "- 该数字对应项目书 05 章 [C7] 效率实测口径（`local_only` 全链路）。",
     ]
-    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"latency report -> {OUT}")
+    out_path = Path(args.out)
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"latency report -> {out_path}")
     print(f"p50={p50:.1f}ms p95={p95:.1f}ms min={min(samples):.1f}ms max={max(samples):.1f}ms")
 
 
