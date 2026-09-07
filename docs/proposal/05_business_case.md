@@ -308,7 +308,7 @@ LLM API 成本较传统席位费**低 3–4 个数量级** [C6]。
 | [C4] | `capacity_evidence.md` | 客户名单、定增、扩产进度 |
 | [C5] | `asp_analysis.md` | ASP 轨迹、竞品 ASP 对照 |
 | [C6] | `competitor_pricing.md` | Wind/慧博/AlphaSense 定价、LLM 成本 |
-| [C7] | （占位） | 效率实测数据，需人工使用采集，暂未采集 |
+| [C7] | `benchmarks/latency_report.md` | 本地全链路延迟实测：N=30，p50 3.9ms / p95 4.6ms（无 LLM/无网络，AMD 台式机 Python 3.12）；另有合作者笔记本单次测量 880ms（2026-09-07）。接入 LLM 后的延迟不在此口径 |
 | [C8] | `sam_sizing.md` | 分析师人数、研究佣金、SAM 测算 |
 
 *本章为研究/竞赛用途，所有估值内容不构成投资建议。采集日期与未竟事项
