@@ -12,4 +12,4 @@ company,product_series,model,rated_torque_nm,peak_torque_nm,weight_kg,torque_den
 Harmonic Drive,CSG,CSG-32,99,178,3.2,31.0,80,60,10000,6500,https://pdf.dfcfw.com/pdf/H3_AP202209081578142140_1.pdf,国金证券行业研报对比表；额定扭矩取范围下限
 Harmonic Drive,CSF,CSF-20-100-2UH,40,147,待补充,待补充,待补充,待补充,10000,6000,https://m.chinabaogao.com/detail/631742.html,观研报告网：与绿的谐波LCS-20对比
 来福谐波,LHT,LHT-32,99,178,3.15,31.4,80,60,待补充,待补充,https://pdf.dfcfw.com/pdf/H3_AP202209081578142140_1.pdf,国金证券行业研报对比表
-纳博特斯克,RV,RV-20E,412,412,2.5,164.8,90,60,待补充,待补充,https://pdf.dfcfw.com/pdf/H3_AP202209081578142140_1.pdf,国金证券行业研报对比表；额定扭矩取范围下限
+纳博特斯克,RV,RV-20E,待补充,待补充,待补充,待补充,待补充,待补充,待补充,待补充,https://pdf.dfcfw.com/pdf/H3_AP202209081578142140_1.pdf,国金研报图表65 PDF抽取列错位待复核（同SH_003 caliber）：原表412Nm/2.5kg/164.8Nm/kg疑串行，不参与可比性基准；以原始研报PDF复核后回填

@@ -1,9 +1,9 @@
 {
- "ontology_id": "tech_to_economics",
- "version": "0.1.0",
+ "ontology_id": "tech_to_economics_shuanghuan",
+ "version": "0.1.0-shuanghuan",
  "updated": "2026-09-07",
- "description": "Claim2Value 规则层第三模块：工程指标 → 经济变量映射规则集。每条规则显式声明触发条件、映射方向、默认弹性系数（带依据注释、可调）与证据强度要求；src/economic_mapper.py 只消费本文件，不在代码中硬编码任何映射。",
- "target_company_default": "绿的谐波",
+ "description": "Claim2Value 规则层第三模块：工程指标 → 经济变量映射规则集。每条规则显式声明触发条件、映射方向、默认弹性系数（带依据注释、可调）与证据强度要求；src/economic_mapper.py 只消费本文件，不在代码中硬编码任何映射。\n本变体用于双环传动（rv/gear 两产品线）：torque_density_to_share 与 weight_to_unit_cost 声明 product_line_scope=[\"rv\"]——RV 减速器的扭矩密度/重量证据只传导 RV 产线，不波及乘用车齿轮产线（跨产品类型传导在原型中禁用，待分产线弹性标定）。",
+ "target_company_default": "双环传动/环动科技",
  "baseline_method": {
   "method": "peer_median",
   "note": "同业基准 = 同口径（applicable_scopes）下非目标公司、可比性不低于 approximate 的样本中位数；样本 <3 时置信度降级。not_comparable 样本一律排除出基准与目标池。"
@@ -108,7 +108,10 @@
     "harmonic_market_share_2021",
     "harmonic_unit_per_robot"
    ],
-   "qualitative_note": "扭矩密度领先是人形机器人等新兴场景（industry_data_summary.csv：Optimus 单台 40 关节）渗透的前提条件之一。"
+   "qualitative_note": "扭矩密度领先是人形机器人等新兴场景（industry_data_summary.csv：Optimus 单台 40 关节）渗透的前提条件之一。【双环变体】product_line_scope=[\"rv\"]：证据来自 RV 减速器，不传导 gear 产线。",
+   "product_line_scope": [
+    "rv"
+   ]
   },
   {
    "rule_id": "power_density_to_share",
@@ -218,7 +221,10 @@
    "elasticity_basis": "同规格减速器重量差近似材料用量差（柔轮/刚轮/外壳金属件占比高），材料成本占 BOM 主要部分，取弹性 0.50：同扭矩级重量差 10% → 单位材料成本约 5%。依据：parameter_table_filled.csv 同扭矩级（额定 40-110 N·m）产品重量 2.5-4.7kg。注意：轻量化的材料成本优势可能被更高的加工/工艺成本抵消，本系数为显式可调假设，需工程成员复核 BOM。",
    "evidence_requirement": "approximate",
    "industry_data_refs": [],
-   "qualitative_note": "重量显著高于同扭矩级同业时，材料成本劣势将压缩毛利空间；反向的轻量化优势是毛利改善的候选来源。"
+   "qualitative_note": "重量显著高于同扭矩级同业时，材料成本劣势将压缩毛利空间；反向的轻量化优势是毛利改善的候选来源。【双环变体】product_line_scope=[\"rv\"]：证据来自 RV 减速器，不传导 gear 产线。",
+   "product_line_scope": [
+    "rv"
+   ]
   }
  ]
 }

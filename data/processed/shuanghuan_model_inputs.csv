@@ -1,0 +1,44 @@
+﻿metric,year,value,unit,input_type,source,source_locator,notes
+rv_revenue_h1_bn,2025H1,0.34899008238,bn_cny,historical,双环传动2025年半年度报告,双环传动2025年半年度报告 p14（营业收入构成表）,"减速器及其他业务 2025H1 半年累计收入 348,990,082.38 元（官方口径，与研报'Q2单季3.49亿'标注不同）"
+gear_revenue_h1_bn,2025H1,2.66893281005,bn_cny,historical,双环传动2025年半年度报告,双环传动2025年半年度报告 p14（营业收入构成表）,"乘用车齿轮 2025H1 半年累计收入 2,668,932,810.05 元"
+rv_units_wan,2025,19,wan_units,assumption,建模假设,无官方销量披露,由 2025H1 收入 0.349bn 年化及 RV 减速器 ASP 假设推算；2025 年假设值
+rv_asp_yuan,2025,4300,yuan_per_unit,assumption,建模假设,无官方 ASP 披露,RV 减速器原型假设 ASP（RV 单价高于谐波），逐年微降
+rv_unit_cost_yuan,2025,2900,yuan_per_unit,assumption,建模假设,无官方成本披露,对应毛利率约 27-28% 的原型假设
+rv_units_wan,2026,24,wan_units,assumption,建模假设,无官方销量披露,由 2025H1 收入 0.349bn 年化及 RV 减速器 ASP 假设推算；2026 年假设值
+rv_asp_yuan,2026,4200,yuan_per_unit,assumption,建模假设,无官方 ASP 披露,RV 减速器原型假设 ASP（RV 单价高于谐波），逐年微降
+rv_unit_cost_yuan,2026,2850,yuan_per_unit,assumption,建模假设,无官方成本披露,对应毛利率约 27-28% 的原型假设
+rv_units_wan,2027,30,wan_units,assumption,建模假设,无官方销量披露,由 2025H1 收入 0.349bn 年化及 RV 减速器 ASP 假设推算；2027 年假设值
+rv_asp_yuan,2027,4100,yuan_per_unit,assumption,建模假设,无官方 ASP 披露,RV 减速器原型假设 ASP（RV 单价高于谐波），逐年微降
+rv_unit_cost_yuan,2027,2800,yuan_per_unit,assumption,建模假设,无官方成本披露,对应毛利率约 27-28% 的原型假设
+gear_units_wan,2025,5400,wan_units,assumption,建模假设,无官方销量披露,由 2025H1 收入 2.669bn 年化及齿轮件均 ASP≈100 元假设推算；2025 年假设值
+gear_asp_yuan,2025,100,yuan_per_unit,assumption,建模假设,无官方 ASP 披露,乘用车齿轮件原型假设 ASP
+gear_unit_cost_yuan,2025,72,yuan_per_unit,assumption,建模假设,无官方成本披露,对应毛利率约 28% 的原型假设
+gear_units_wan,2026,5800,wan_units,assumption,建模假设,无官方销量披露,由 2025H1 收入 2.669bn 年化及齿轮件均 ASP≈100 元假设推算；2026 年假设值
+gear_asp_yuan,2026,100,yuan_per_unit,assumption,建模假设,无官方 ASP 披露,乘用车齿轮件原型假设 ASP
+gear_unit_cost_yuan,2026,72,yuan_per_unit,assumption,建模假设,无官方成本披露,对应毛利率约 28% 的原型假设
+gear_units_wan,2027,6200,wan_units,assumption,建模假设,无官方销量披露,由 2025H1 收入 2.669bn 年化及齿轮件均 ASP≈100 元假设推算；2027 年假设值
+gear_asp_yuan,2027,99,yuan_per_unit,assumption,建模假设,无官方 ASP 披露,乘用车齿轮件原型假设 ASP
+gear_unit_cost_yuan,2027,72,yuan_per_unit,assumption,建模假设,无官方成本披露,对应毛利率约 28% 的原型假设
+selling_expense_rate,2025,0.02,ratio,assumption,建模假设,行业惯例原型假设,销售费用率——非公司披露值
+admin_expense_rate,2025,0.055,ratio,assumption,建模假设,行业惯例原型假设,管理费用率——非公司披露值
+rd_expense_rate,2025,0.045,ratio,assumption,建模假设,行业惯例原型假设,研发费用率——非公司披露值
+depreciation_rate,2025,0.06,ratio,assumption,建模假设,行业惯例原型假设,折旧率（占收入）——非公司披露值
+tax_rate,2025,0.15,ratio,assumption,建模假设,行业惯例原型假设,所得税率——非公司披露值
+capex_rate,2025,0.05,ratio,assumption,建模假设,行业惯例原型假设,资本开支率（占收入）——非公司披露值
+nwc_rate,2025,0.10,ratio,assumption,建模假设,行业惯例原型假设,净营运资金率（占收入）——行业惯例原型假设（下调以使 downside 情景 FCF 保持正值，仍为非披露假设）
+selling_expense_rate,2026,0.02,ratio,assumption,建模假设,行业惯例原型假设,销售费用率——非公司披露值
+admin_expense_rate,2026,0.055,ratio,assumption,建模假设,行业惯例原型假设,管理费用率——非公司披露值
+rd_expense_rate,2026,0.045,ratio,assumption,建模假设,行业惯例原型假设,研发费用率——非公司披露值
+depreciation_rate,2026,0.06,ratio,assumption,建模假设,行业惯例原型假设,折旧率（占收入）——非公司披露值
+tax_rate,2026,0.15,ratio,assumption,建模假设,行业惯例原型假设,所得税率——非公司披露值
+capex_rate,2026,0.05,ratio,assumption,建模假设,行业惯例原型假设,资本开支率（占收入）——非公司披露值
+nwc_rate,2026,0.10,ratio,assumption,建模假设,行业惯例原型假设,净营运资金率（占收入）——行业惯例原型假设（下调以使 downside 情景 FCF 保持正值，仍为非披露假设）
+selling_expense_rate,2027,0.02,ratio,assumption,建模假设,行业惯例原型假设,销售费用率——非公司披露值
+admin_expense_rate,2027,0.055,ratio,assumption,建模假设,行业惯例原型假设,管理费用率——非公司披露值
+rd_expense_rate,2027,0.045,ratio,assumption,建模假设,行业惯例原型假设,研发费用率——非公司披露值
+depreciation_rate,2027,0.06,ratio,assumption,建模假设,行业惯例原型假设,折旧率（占收入）——非公司披露值
+tax_rate,2027,0.15,ratio,assumption,建模假设,行业惯例原型假设,所得税率——非公司披露值
+capex_rate,2027,0.05,ratio,assumption,建模假设,行业惯例原型假设,资本开支率（占收入）——非公司披露值
+nwc_rate,2027,0.10,ratio,assumption,建模假设,行业惯例原型假设,净营运资金率（占收入）——行业惯例原型假设（下调以使 downside 情景 FCF 保持正值，仍为非披露假设）
+discount_rate,valuation,0.1,ratio,assumption,建模假设,WACC 原型假设,简化 WACC 假设
+terminal_growth_rate,valuation,0.03,ratio,assumption,建模假设,永续增长原型假设,永续增长率假设

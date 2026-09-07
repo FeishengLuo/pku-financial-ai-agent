@@ -693,20 +693,36 @@ def generate_financial_model_inputs(
     if ontology is None:
         ontology = load_ontology()
     variables: Dict[str, Dict] = ontology.get("economic_variables", {})
-    deltas = _combined_deltas(assumption_set)
+    rules_by_id = {r.get("rule_id"): r for r in ontology.get("rules", [])}
     year_set = {str(y) for y in years}
 
-    # 财务指标 → (经济变量, 涉及的规则 id)
+    # 财务指标 → (经济变量, 该指标实际生效的规则 id 列表)
+    # 规则可选声明 product_line_scope：工程证据只支持该规则作用于特定
+    # 产品线（如 RV 重量劣势只传导 RV 产线成本，不波及其他产线）。
+    # 增量按"生效规则集合"逐指标复合（而非变量级全量复合），
+    # 避免被 scope 排除的规则经同变量其他规则间接作用于该产线。
     metric_to_variable: Dict[str, Tuple[str, List[str]]] = {}
     for assumption in assumption_set.quantitative():
         fin_metrics = variables.get(assumption.variable, {}).get("financial_metrics", {})
+        rule = rules_by_id.get(assumption.rule_id, {})
+        line_scope = rule.get("product_line_scope")
         for line in product_lines:
+            if line_scope and line not in line_scope:
+                continue
             metric_name = fin_metrics.get(line)
             if not metric_name:
                 continue
             entry = metric_to_variable.setdefault(metric_name, (assumption.variable, []))
             if assumption.rule_id not in entry[1]:
                 entry[1].append(assumption.rule_id)
+
+    def _combined_delta_for(variable: str, rule_ids: Sequence[str]) -> float:
+        """只复合给定规则集合对该变量的增量（乘法复合）。"""
+        combined = 0.0
+        for assumption in assumption_set.quantitative():
+            if assumption.variable == variable and assumption.rule_id in rule_ids:
+                combined = round((1.0 + combined) * (1.0 + assumption.delta_pct) - 1.0, 8)
+        return combined
 
     new_rows: List[ModelInput] = []
     for row in base_inputs.rows:
@@ -715,7 +731,7 @@ def generate_financial_model_inputs(
             new_rows.append(row)  # 未覆盖行原样保留（含 historical 披露锚点）
             continue
         variable_key, rule_ids = target
-        delta = deltas[variable_key]
+        delta = _combined_delta_for(variable_key, rule_ids)
         new_rows.append(ModelInput(
             metric=row.metric,
             year=row.year,

@@ -1,4 +1,4 @@
-"""可追溯的绿的谐波简化财务模型。
+"""可追溯的多产品线简化财务模型（P0 原型）。
 
 模型定位是 P0 原型：用本地 CSV 输入计算三种经营情景，不代表正式投资预测。
 每条输入都带有 ``input_type``：
@@ -9,6 +9,12 @@
 
 计算链：销量 × ASP → 收入 → COGS → 毛利 → EBITDA → EBIT → FCF → DCF。
 金额统一为十亿元人民币（bn CNY），销量统一为万台，ASP/成本统一为元/台。
+
+产品线（product lines）从输入 CSV 自动识别：metric 形如 ``<prefix>_units_wan``
+的前缀即一条产品线（如 harmonic/joint/rv/gear），要求同前缀的
+``<prefix>_asp_yuan`` 与 ``<prefix>_unit_cost_yuan`` 行齐全。
+首个落地案例为绿的谐波（harmonic/joint 两线）；双环传动（rv/gear 两线）
+用于验证整条估值链对公司可移植（Phase 3C）。
 """
 
 from __future__ import annotations
@@ -19,7 +25,7 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -28,13 +34,7 @@ DEFAULT_MODEL_PATH = REPO_ROOT / "data" / "processed" / "green_harmonic_model.xl
 DEFAULT_JSON_PATH = REPO_ROOT / "data" / "processed" / "green_harmonic_model_results.json"
 
 FORECAST_YEARS = (2025, 2026, 2027)
-REQUIRED_METRICS = (
-    "harmonic_units_wan",
-    "joint_units_wan",
-    "harmonic_asp_yuan",
-    "joint_asp_yuan",
-    "harmonic_unit_cost_yuan",
-    "joint_unit_cost_yuan",
+NON_PRODUCT_METRICS = (
     "selling_expense_rate",
     "admin_expense_rate",
     "rd_expense_rate",
@@ -45,6 +45,40 @@ REQUIRED_METRICS = (
     "discount_rate",
     "terminal_growth_rate",
 )
+# 兼容引用：旧代码/测试可能依赖 REQUIRED_METRICS（harmonic/joint 全集）
+REQUIRED_METRICS = (
+    "harmonic_units_wan",
+    "joint_units_wan",
+    "harmonic_asp_yuan",
+    "joint_asp_yuan",
+    "harmonic_unit_cost_yuan",
+    "joint_unit_cost_yuan",
+) + NON_PRODUCT_METRICS
+
+_UNIT_SUFFIX = "_units_wan"
+
+
+def detect_product_lines(rows: Iterable[ModelInput]) -> List[str]:
+    """从输入行识别产品线前缀。
+
+    metric 形如 ``<prefix>_units_wan`` 的前缀即一条产品线；
+    同前缀的 ``<prefix>_asp_yuan`` 与 ``<prefix>_unit_cost_yuan`` 必须齐全，
+    否则抛 ValueError（缺口尽早暴露，不让模型静默漏算一条产品线）。
+    """
+    metrics = {row.metric for row in rows}
+    prefixes = sorted(
+        m[: -len(_UNIT_SUFFIX)] for m in metrics if m.endswith(_UNIT_SUFFIX)
+    )
+    if not prefixes:
+        raise ValueError("输入中没有任何 <prefix>_units_wan 产品线销量行")
+    missing = []
+    for prefix in prefixes:
+        for suffix in ("_asp_yuan", "_unit_cost_yuan"):
+            if prefix + suffix not in metrics:
+                missing.append(prefix + suffix)
+    if missing:
+        raise ValueError(f"产品线输入不完整，缺少：{', '.join(missing)}")
+    return prefixes
 
 
 @dataclass(frozen=True)
@@ -127,9 +161,28 @@ class FinancialModelInputs:
     def value(self, metric: str, year: int | str) -> float:
         return self.get(metric, year).value
 
-    def validate(self, years: Sequence[int] = FORECAST_YEARS) -> None:
+    def validate(
+        self,
+        years: Sequence[int] = FORECAST_YEARS,
+        product_lines: Optional[Sequence[str]] = None,
+    ) -> None:
+        """校验输入完整性。
+
+        product_lines 为 None 时自动识别（兼容旧调用）；显式传入时
+        按给定产品线校验（如双环的 rv/gear）。
+        """
+        if product_lines is None:
+            product_lines = detect_product_lines(self.rows)
+        metrics: List[str] = []
+        for prefix in product_lines:
+            metrics += [
+                f"{prefix}{_UNIT_SUFFIX}",
+                f"{prefix}_asp_yuan",
+                f"{prefix}_unit_cost_yuan",
+            ]
+        metrics += list(NON_PRODUCT_METRICS)
         missing = []
-        for metric in REQUIRED_METRICS:
+        for metric in metrics:
             year = "valuation" if metric in {"discount_rate", "terminal_growth_rate"} else None
             if year is not None:
                 if (metric, year) not in self._values:
@@ -198,11 +251,19 @@ def run_model(
     inputs: FinancialModelInputs,
     scenario: str = "base",
     years: Sequence[int] = FORECAST_YEARS,
+    product_lines: Optional[Sequence[str]] = None,
+    model_name: str = "multi_product_simplified_financial_model",
 ) -> Dict[str, Any]:
-    """运行一个情景并返回可序列化结果。"""
+    """运行一个情景并返回可序列化结果。
+
+    product_lines 为 None 时自动识别（绿的谐波 CSV 得到 harmonic/joint；
+    双环传动 CSV 得到 rv/gear）。
+    """
     if scenario not in SCENARIOS:
         raise ValueError(f"未知情景：{scenario}，可选：{sorted(SCENARIOS)}")
-    inputs.validate(years)
+    if product_lines is None:
+        product_lines = detect_product_lines(inputs.rows)
+    inputs.validate(years, product_lines)
     settings = SCENARIOS[scenario]
     projections: List[Dict[str, Any]] = []
     previous_nwc = 0.0
@@ -213,19 +274,19 @@ def run_model(
         cost_factor = settings["unit_cost_multiplier"]
         opex_factor = settings["opex_multiplier"]
 
-        harmonic_units = inputs.value("harmonic_units_wan", year) * volume_factor
-        joint_units = inputs.value("joint_units_wan", year) * volume_factor
-        harmonic_asp = inputs.value("harmonic_asp_yuan", year) * asp_factor
-        joint_asp = inputs.value("joint_asp_yuan", year) * asp_factor
-        harmonic_cost = inputs.value("harmonic_unit_cost_yuan", year) * cost_factor
-        joint_cost = inputs.value("joint_unit_cost_yuan", year) * cost_factor
+        line_units: Dict[str, float] = {}
+        line_revenue: Dict[str, float] = {}
+        line_cogs: Dict[str, float] = {}
+        for prefix in product_lines:
+            units = inputs.value(f"{prefix}{_UNIT_SUFFIX}", year) * volume_factor
+            asp = inputs.value(f"{prefix}_asp_yuan", year) * asp_factor
+            cost = inputs.value(f"{prefix}_unit_cost_yuan", year) * cost_factor
+            line_units[prefix] = units
+            line_revenue[prefix] = _money_from_units(units, asp)
+            line_cogs[prefix] = _money_from_units(units, cost)
 
-        harmonic_revenue = _money_from_units(harmonic_units, harmonic_asp)
-        joint_revenue = _money_from_units(joint_units, joint_asp)
-        harmonic_cogs = _money_from_units(harmonic_units, harmonic_cost)
-        joint_cogs = _money_from_units(joint_units, joint_cost)
-        revenue = harmonic_revenue + joint_revenue
-        cogs = harmonic_cogs + joint_cogs
+        revenue = sum(line_revenue.values())
+        cogs = sum(line_cogs.values())
         gross_profit = revenue - cogs
 
         selling = inputs.value("selling_expense_rate", year) * opex_factor
@@ -243,15 +304,9 @@ def run_model(
         fcf = nopat + depreciation - capex - change_nwc
         previous_nwc = nwc
 
-        projections.append({
+        projection: Dict[str, Any] = {
             "year": year,
-            "harmonic_units_wan": harmonic_units,
-            "joint_units_wan": joint_units,
-            "harmonic_revenue_bn": harmonic_revenue,
-            "joint_revenue_bn": joint_revenue,
             "revenue_bn": revenue,
-            "harmonic_cogs_bn": harmonic_cogs,
-            "joint_cogs_bn": joint_cogs,
             "cogs_bn": cogs,
             "gross_profit_bn": gross_profit,
             "gross_margin": gross_profit / revenue if revenue else 0.0,
@@ -264,7 +319,12 @@ def run_model(
             "capex_bn": capex,
             "change_nwc_bn": change_nwc,
             "fcf_bn": fcf,
-        })
+        }
+        for prefix in product_lines:
+            projection[f"{prefix}_units_wan"] = line_units[prefix]
+            projection[f"{prefix}_revenue_bn"] = line_revenue[prefix]
+            projection[f"{prefix}_cogs_bn"] = line_cogs[prefix]
+        projections.append(projection)
 
     discount_rate = inputs.value("discount_rate", "valuation")
     terminal_growth = inputs.value("terminal_growth_rate", "valuation")
@@ -279,7 +339,8 @@ def run_model(
     enterprise_value = sum(discounted_fcfs) + discounted_terminal
 
     result = {
-        "model_name": "green_harmonic_simplified_financial_model",
+        "model_name": model_name,
+        "product_lines": list(product_lines),
         "model_status": "prototype_scenario_not_investment_recommendation",
         "scenario": scenario,
         "currency": "bn_cny",
@@ -315,28 +376,26 @@ def _ev_at_volume_multiplier(
     inputs: FinancialModelInputs,
     volume_multiplier: float,
     years: Sequence[int],
+    product_lines: Optional[Sequence[str]] = None,
 ) -> float:
     """在 base 情景其余参数不变、仅销量统一缩放 volume_multiplier 时的 EV。
 
     独立实现（不复用 SCENARIOS），保证反向求解不改变正向情景的定义。
     """
-    inputs.validate(years)
+    if product_lines is None:
+        product_lines = detect_product_lines(inputs.rows)
+    inputs.validate(years, product_lines)
     projections: List[Dict[str, Any]] = []
     previous_nwc = 0.0
     for year in years:
-        harmonic_units = inputs.value("harmonic_units_wan", year) * volume_multiplier
-        joint_units = inputs.value("joint_units_wan", year) * volume_multiplier
-        harmonic_asp = inputs.value("harmonic_asp_yuan", year)
-        joint_asp = inputs.value("joint_asp_yuan", year)
-        harmonic_cost = inputs.value("harmonic_unit_cost_yuan", year)
-        joint_cost = inputs.value("joint_unit_cost_yuan", year)
-
-        harmonic_revenue = _money_from_units(harmonic_units, harmonic_asp)
-        joint_revenue = _money_from_units(joint_units, joint_asp)
-        harmonic_cogs = _money_from_units(harmonic_units, harmonic_cost)
-        joint_cogs = _money_from_units(joint_units, joint_cost)
-        revenue = harmonic_revenue + joint_revenue
-        cogs = harmonic_cogs + joint_cogs
+        revenue = 0.0
+        cogs = 0.0
+        for prefix in product_lines:
+            units = inputs.value(f"{prefix}{_UNIT_SUFFIX}", year) * volume_multiplier
+            asp = inputs.value(f"{prefix}_asp_yuan", year)
+            cost = inputs.value(f"{prefix}_unit_cost_yuan", year)
+            revenue += _money_from_units(units, asp)
+            cogs += _money_from_units(units, cost)
         gross_profit = revenue - cogs
 
         opex = revenue * (
@@ -374,6 +433,7 @@ def reverse_dcf(
     inputs: FinancialModelInputs,
     target_ev_bn: float,
     years: Sequence[int] = FORECAST_YEARS,
+    product_lines: Optional[Sequence[str]] = None,
 ) -> Dict[str, Any]:
     """反向 DCF：给定目标企业价值，反推模型需要的销量倍数与隐含增长。
 
@@ -385,11 +445,13 @@ def reverse_dcf(
     """
     if target_ev_bn <= 0:
         raise ValueError("target_ev_bn 必须为正数")
-    inputs.validate(years)
+    if product_lines is None:
+        product_lines = detect_product_lines(inputs.rows)
+    inputs.validate(years, product_lines)
 
     lo, hi = 0.05, 50.0
-    ev_lo = _ev_at_volume_multiplier(inputs, lo, years)
-    ev_hi = _ev_at_volume_multiplier(inputs, hi, years)
+    ev_lo = _ev_at_volume_multiplier(inputs, lo, years, product_lines)
+    ev_hi = _ev_at_volume_multiplier(inputs, hi, years, product_lines)
     if not (ev_lo <= target_ev_bn <= ev_hi):
         raise ValueError(
             f"目标 EV {target_ev_bn:.4f} bn 超出可解区间 "
@@ -398,16 +460,15 @@ def reverse_dcf(
 
     for _ in range(60):
         mid = (lo + hi) / 2
-        if _ev_at_volume_multiplier(inputs, mid, years) < target_ev_bn:
+        if _ev_at_volume_multiplier(inputs, mid, years, product_lines) < target_ev_bn:
             lo = mid
         else:
             hi = mid
     implied_multiplier = (lo + hi) / 2
 
-    base_run = run_model(inputs, "base", years)
-    base_2027_units = (
-        inputs.value("harmonic_units_wan", years[-1])
-        + inputs.value("joint_units_wan", years[-1])
+    base_run = run_model(inputs, "base", years, product_lines)
+    base_2027_units = sum(
+        inputs.value(f"{prefix}{_UNIT_SUFFIX}", years[-1]) for prefix in product_lines
     )
     implied_2027_units = base_2027_units * implied_multiplier
     base_ev = base_run["valuation"]["enterprise_value_bn"]
@@ -422,7 +483,7 @@ def reverse_dcf(
         "target_ev_bn": target_ev_bn,
         "implied_volume_multiplier": implied_multiplier,
         "ev_at_implied_multiplier_bn": _ev_at_volume_multiplier(
-            inputs, implied_multiplier, years),
+            inputs, implied_multiplier, years, product_lines),
         "implied_2027_total_units_wan": implied_2027_units,
         "base_case": {
             "ev_bn": base_ev,
@@ -490,17 +551,22 @@ def export_excel(
             result["model_status"],
         ])
 
-    metric_order = [
-        "harmonic_units_wan", "joint_units_wan", "revenue_bn", "cogs_bn",
-        "gross_profit_bn", "gross_margin", "opex_bn", "ebitda_bn",
-        "ebitda_margin", "ebit_bn", "tax_bn", "capex_bn", "change_nwc_bn", "fcf_bn",
+    common_metrics = [
+        "revenue_bn", "cogs_bn", "gross_profit_bn", "gross_margin", "opex_bn",
+        "ebitda_bn", "ebitda_margin", "ebit_bn", "tax_bn", "capex_bn",
+        "change_nwc_bn", "fcf_bn",
     ]
     for name, result in results.items():
         sheet = workbook.create_sheet(name.title())
         sheet.append(["metric", *[str(year) for year in result["years"]], "logic"])
         for cell in sheet[1]:
             cell.font = Font(bold=True)
-        for metric in metric_order:
+        # 产品线指标（各情景投影中实际存在的 <prefix>_ 键）排在公共指标前
+        sample = result["projections"][0]
+        product_metrics = sorted(
+            key for key in sample if key.endswith(("_units_wan", "_revenue_bn", "_cogs_bn"))
+        )
+        for metric in product_metrics + common_metrics:
             values = [projection[metric] for projection in result["projections"]]
             logic = "calculated; see src/financial_model.py"
             sheet.append([metric, *values, logic])
@@ -513,7 +579,7 @@ def export_excel(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="绿的谐波可追溯简化财务模型")
+    parser = argparse.ArgumentParser(description="可追溯的多产品线简化财务模型（P0 原型）")
     parser.add_argument("--inputs", default=str(DEFAULT_INPUT_PATH))
     parser.add_argument("--xlsx", default=str(DEFAULT_MODEL_PATH))
     parser.add_argument("--json", default=str(DEFAULT_JSON_PATH))
