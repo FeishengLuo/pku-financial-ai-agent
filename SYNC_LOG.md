@@ -270,7 +270,8 @@
 
 | 日期 | 提交哈希 | 类型 | 一句话说明 | 推送状态 |
 |---|---|---|---|---|
-| 2026-09-06 | `fix/verifier` | fix/test | StateVerifier 误报修复：误伤 6→0，合并准确率 83.7%/82.7% → **91.8%/90.8%**；新增 11 项 fixture 回归测试 | ⏳ PR 待合并 |
+| 2026-09-07 | `fix/proposal-number` | docs | 评估层验收后修正：03_product 的 benchmark 数字 83.7%/82.7% → **91.8%/90.8%**（含修复前对照），消除与 07_team 的跨章不一致 | ✅ 直接推 main |
+| 2026-09-06 | `fix/verifier` | fix/test | StateVerifier 误报修复：误伤 6→0，合并准确率 83.7%/82.7% → **91.8%/90.8%**；新增 11 项 fixture 回归测试 | ✅ 已合并（0449d77，PR #4） |
 | 2026-09-05 | `c58a7fc` | feat/test/docs | Feisheng：审计状态并新增绿的谐波简化财务模型、本地无 API Demo、输入 fixture、结果文件、9 项回归测试和说明同步；PR #3 | ✅ 已合并（e157ee3） |
 | 2026-09-05 | `cbc0f1d` | feat | 核心验证引擎：state_verifier + evidence_ledger + claim_verifier + workflow + pipeline 评估报告 | ✅ 已推送 |
 | 2026-09-04 | `360f68c` | benchmark | Claim 验证 benchmark 全套：mutation 考卷 98 用例 + 双模型评估 + Oracle 自我修正 + 判别力报告 | ✅ 已推送 |

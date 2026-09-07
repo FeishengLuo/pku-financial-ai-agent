@@ -107,7 +107,8 @@ prototype_scenario_not_investment_recommendation` 限定，任何引用须携带
 **质量证据**：全量 `python -m pytest tests/ -q` **129 passed**（约 4 秒），
 含 9 项端到端回归（财务可复算、输入类型隔离、Demo 五要素、无证据 abstain、
 降级路径契约）。另有自建 benchmark 98 个判别用例，规则层 + LLM pipeline
-对 Claude 83.7%、GPT 82.7%（`benchmarks/`，为 benchmark 判别准确率，非业务准确率）。
+对 Claude **91.8%**、GPT **90.8%**（StateVerifier 误报修复后；修复前为 83.7%/82.7%，
+见 PR #4 及 `benchmarks/pipeline_report.md`；为 benchmark 判别准确率，非业务准确率）。
 产出物示例：三情景估值原型 EV 悲观 32.16 亿 / 基准 60.06 亿 / 乐观 86.50 亿元
 （`data/processed/green_harmonic_model_results.json`）。
 
