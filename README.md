@@ -12,17 +12,21 @@ Claim2Value（Evidence-Grounded Engineering-to-Finance Agent）面向产业链�
 
 > 产品不是专用工具，而是通用 Agent。三个案例分别验证**技术性能、产能需求、客户订单**三类典型 claim。
 
-## 当前进展（2026-09-05）
+## 当前进展（2026-09-07，Phase 3C 完成 / Phase 3D 收尾中）
 
-PR #2 已合并到 `main`。Claim benchmark、Evidence Ledger、StateVerifier、ClaimVerifier 和验证 workflow 已可运行；98 个 benchmark 用例的规则层 + LLM pipeline 结果为 Claude 83.7%、GPT 82.7%。这些是测试集判别准确率，不是现实业务最终准确率。
+代码、数据与文档已收口至交付前状态，质量线：**140 个回归测试全过 + 提案审校脚本 0 issue**（`python scripts/audit_proposal.py`）。PR #2–#22 全部合并到 `main`，当前能力全景：
 
-当前已进入下一阶段首个可运行切片：
+**1. 多公司证据网络（PR #15/#21）**：Claim Bank 扩展至 **11 家机器人产业链公司 51 条结构化 claim**——36 条已验证（公告原文级，附页码与内容指纹，BK_004 双源逐字、GH_002 双源互证），15 条待验证（带显式定义疑点，终验核对清单 `docs/proposal/appendix_pending_review.md` 由 Phase 3D 新增）；另有 1 条行业市场数据（IND_001）。
 
-- 绿的谐波简化财务模型：输出 base/upside/downside 三种情景，并在输入表中区分历史锚点、人工假设和计算结果；
-- 本地单案例 Demo：使用本地 evidence fixture，不调用外部 API；
-- 最小回归测试：覆盖模型可复算性、输入溯源和 Demo 的保守判定。
+**2. 双环传动全链路估值链（PR #20）**：financial_model 泛化到多产品线（rv/gear 自动识别），economic_mapper 支持规则级 `product_line_scope`，ontology 变体 `tech_to_economics_ontology_shuanghuan.json` + `data/processed/shuanghuan_model_inputs.csv`，端到端输出三情景 EV **5.88 / 10.94 / 0.44 亿元**（base/upside/downside），回归覆盖 `tests/test_shuanghuan_chain.py`。
 
-模型输入、Claim 证据和 Demo 输出仍需人工复核；官方 datasheet、专利核验、全部 Claim evidence 回填和实时检索属于后续证据增强任务。完整状态见 [`TODO.md`](TODO.md) 和 [`SYNC_LOG.md`](SYNC_LOG.md)。
+**3. 反向 DCF 视角（PR #19）**：以 2026-09-04 市值 512.96 亿元反推，绿的谐波现价隐含销量倍数 **8.54×**；三情景下市价与内在价值 gap 为 **-88.29% / -83.14% / -93.73%**——"以价换量"放量逻辑与 365 倍 PE 期权定价并存的现象被量化呈现。
+
+**4. 工程性能（PR #18）**：规则链延迟基准 N=30 实测 **p50 3.9ms / p95 4.6ms**（`scripts/benchmark_latency.py`，报告 `benchmarks/latency_report.md`）。
+
+**5. 演示与答辩材料**：`docs/proposal/` 01–09 章成稿（产品、案例、商业论证、路线图、合规、答辩问答预案）；演示脚本（10 章）与路演 PPT 大纲（11 章）在 Phase 3D 补齐。
+
+> 历史里程碑：PR #2 时代 98 个 benchmark 用例规则层 + LLM pipeline 判别准确率 Claude 83.7% / GPT 82.7%（测试集准确率，非业务最终准确率）。实时检索、专利核验全覆盖属赛后增强方向。完整状态见 [`TODO.md`](TODO.md)、[`SYNC_LOG.md`](SYNC_LOG.md) 与 [`docs/KIMICODE_PROGRESS.md`](docs/KIMICODE_PROGRESS.md)。
 
 ## 参赛方向
 
@@ -42,9 +46,16 @@ PR #2 已合并到 `main`。Claim benchmark、Evidence Ledger、StateVerifier、
 │   ├── evidence_ledger.py            # 证据账本
 │   ├── claim_verifier.py             # Claim 验证
 │   ├── state_verifier.py             # 状态/口径验证
-│   ├── financial_model.py            # 可追溯简化财务模型
-│   ├── workflow.py                   # 验证工作流（当前为纯 Python 函数链）
+│   ├── financial_model.py            # 可追溯简化财务模型（含反向 DCF）
+│   ├── economic_mapper.py            # 工程指标→经济机制映射
+│   ├── engineering_analyzer.py       # 工程语义分析
+│   ├── causal_critic.py              # 因果批判
+│   ├── claim_bank_writer.py          # Claim Bank 结构化写入
+│   ├── workflow.py                   # 串联验证工作流（四模块函数链）
 │   └── data_tools/                   # PDF/文本候选提取脚本
+├── scripts/                          # 工具脚本
+│   ├── audit_proposal.py             # 提案文档审校（当前 0 issue）
+│   └── benchmark_latency.py          # 规则链延迟基准
 ├── data/                             # 数据资料
 │   ├── README.md                     # 数据目录说明
 │   ├── collection_checklist.md       # 数据收集总清单
@@ -122,11 +133,21 @@ streamlit run app.py
 
 ## 案例设计
 
-| 公司 | 代码 | 细分 | 核心 Claim | 验证能力 |
+| 公司 | 代码 | 细分 | Claim 数（已验证/待验证） | 代表 Claim |
 |---|---|---|---|---|
-| 绿的谐波 | 688017 | 谐波减速器 | 新一代关节模组扭矩密度提升 30% | 技术性能 claim |
-| 步科股份 | 688160 | 无框力矩电机 | 第四代 FMK 功率密度提升 20%，出货 8.3 万台（+247%） | 产能/需求 claim |
-| 双环传动 | 002472 | RV 减速器 | RV 扭矩密度 180 N·m/kg，获特斯拉 4000 套订单 | 客户/订单 claim |
+| 绿的谐波 | 688017 | 谐波减速器 | 7（6/1） | 新一代关节模组扭矩密度提升 30%；市值 512.96 亿锚点 |
+| 步科股份 | 688160 | 无框力矩电机 | 5（3/2） | 第四代 FMK 功率密度提升 20%，出货 8.3 万台（+247%） |
+| 双环传动 | 002472 | RV 减速器 | 6（4/2，含子公司环动科技 3 条） | RV 扭矩密度 180 N·m/kg；环动市占率 10.11%→提升；产能利用率 >100% |
+| 中大力德 | 002896 | 减速器+电机 | 4（4/0） | 技术性能类 claim 全验证 |
+| 鸣志电器 | 603728 | 步进/伺服电机 | 4（4/0） | 产能需求类 claim 全验证 |
+| 柯力传感 | 603662 | 力矩传感器 | 4（4/0） | 技术性能类 claim 全验证 |
+| 五洲新春 | 603667 | 丝杠/轴承 | 4（1/3） | 行星滚柱丝杠进展（3 条待终验） |
+| 贝斯特 | 300580 | 丝杠/精密零部件 | 4（2/2） | 线性执行器产能扩张 |
+| 恒立液压 | 601100 | 液压/丝杠 | 4（1/3） | 电动缸业务进展（3 条待终验） |
+| 国茂股份 | 603915 | 减速器 | 4（3/1） | 产能/需求类 claim |
+| 秦川机床 | 000837 | 齿轮磨床/减速器 | 4（3/1） | 产能/需求类 claim |
+
+另有行业市场数据 1 条（IND_001，工业机器人市场）。51 条结构化明细见 `data/processed/claim_bank_filled.json`，原文摘录与核验指纹见 `docs/proposal/appendix_pending_review.md` 与 04 章。
 
 ## 协作规范
 
@@ -200,13 +221,13 @@ API key、`.env`、`*.pdf`（研究报告类）、第三方仓库代码、Python
 
 > 注意：公司公告/研报 PDF 在 `data/raw/` 下是**要提交**的，它们有 `.meta.json` 记录来源。
 
-## 当前任务
+## 当前任务（Phase 3D 收尾）
 
-1. 由经济金融成员复核简化模型的财务口径、BOM、税率和 DCF 假设；
-2. 修复 StateVerifier 的数值、时间和复合 Claim 误判并补回归 fixture；
-3. 继续补齐主案例可定位 evidence，再推进工程分析、经济映射和因果批判。
+1. 15 条待验证 Claim 人工终验（核对清单已备好：`docs/proposal/appendix_pending_review.md`）；
+2. 演示彩排：按 `docs/proposal/10_demo_script.md` 走一遍 3 分钟版 + fallback 版；
+3. 赛后增强（非阻塞）：实时检索、专利核验全覆盖、更多产业链公司接入。
 
-首版 Demo 只承诺绿的谐波本地单案例流程，不以实时检索、全行业覆盖或全部 Claim 核验为阻塞条件。
+首版 Demo 已覆盖绿的谐波本地单案例流程与双环传动全链路估值链；不以实时检索、全行业覆盖或全部 Claim 核验为阻塞条件。
 
 ## 注意事项
 
