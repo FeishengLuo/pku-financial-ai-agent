@@ -68,7 +68,7 @@ Claim2Value 面向券商研究所、产业基金分析师，提供三种互相�
 `claim_bank_writer.py` 把人工核验后的证据写回 Claim Bank：核验人字段为空即硬拒绝
 （`SKIP_EMPTY_VERIFIER`）；每条证据按 `sha256(excerpt||source)[:16]` 指纹幂等去重；
 写入采用临时文件 + `os.replace` 原子替换并自动备份。任何一条进入 Claim Bank 的证据
-都可定位到原始 PDF 的具体页码（当前 5 条已验证 Claim 均定位到年报/半年报页码，PR #11）。
+都可定位到原始 PDF 的具体页码（当前 14 条已验证 Claim 均定位到公告原文页码，PR #11/#15）。
 
 **（2）置信度分级——来源等级客观化**
 `src/evidence_ledger.py` 按 年报 > 研报 > 新闻 > 传闻 的客观等级给证据打分

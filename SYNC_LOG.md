@@ -6,6 +6,31 @@
 
 ---
 
+## 项目书 Phase 3A 提质（2026-09-06，PR #16）
+
+### 新增/变更
+
+| 文件 | 内容 |
+|---|---|
+| `scripts/audit_proposal.py` | 新增项目书机械审校脚本：10 个关键锚点数字跨章比对、[C1]–[C8] 溯源标签正文引用 vs 章末索引比对、PR 引用扫描、过时表述扫描；输出 `docs/proposal/audit_report.md`，当前 issues=0 |
+| `docs/proposal/04_case_study.md` | 重心章升级：摘要/诚实说明 5→**14 条已验证**（按公司分组列 Claim ID：绿的 6 + 步科 3 + 双环 4 + 行业 1）；新增示例三（GH_002 双源互证）、示例四（BK_004 双源逐字）、示例五（SH_005 产能利用率 101.30% 呼应 4.3.2）；StateVerifier 结论同步为 14 已验证/5 待验证；附录新增 [C1]/[C2] 两行索引 |
+| `docs/proposal/06_roadmap.md` | PR 表补 #14/#15 行；M1 改"5 条待验证补验"；未完成项如实标注；基线更新 `c2df0f4` |
+| `docs/proposal/03_product.md` | 产品状态表述同步 14 条已验证 Claim（PR #11/#15） |
+| `docs/proposal/05_business_case.md` | 附录索引补 [C7] 占位行（效率实测，待人工采集），消除索引缺口 |
+| `docs/proposal/01/02/06/08` | 各章末加溯源标签全局索引指引行（指向第 4 章章末 C1–C5 与第 5 章附录 C6–C8） |
+| `data/processed/claim_bank_filled.json` | SH_003 notes 补复核结论：项目书未引用该数字，无正文风险；后续引用一律以官方半年报 H1 累计口径为准，不采用研报"Q2 单季 +35.8%"标注 |
+
+### 纠错说明（重要）
+
+- 此前 SYNC_LOG PR #15 节与 `docs/KIMICODE_PROGRESS.md` 误写"12 条已验证"，**实为 14 条**（PR #15 合并时实测 claim_bank_filled.json：GH_001–006 + BK_002/004/005 + SH_001/004/005/006 + IND_001）。本次已一并修正，审校脚本新增"12 条已验证"过时表述扫描防复发。
+
+### 验证
+
+- `python scripts/audit_proposal.py` → issues=0（锚点数字 10 项跨章全部一致；溯源标签索引无缺失）
+- `python -m pytest tests/ -q` → **129 passed**
+
+---
+
 ## Kimi Code 任务进度记录文档（2026-09-06，直接推送 main）
 
 ### 新增
@@ -45,7 +70,7 @@
 
 - verifier 字段统一"经济金融组复核"；人工终验机制 = 用户 review PR 时逐条核对 excerpt 与源文件。
 - 回归测试 129 passed（`test_claim_count_unchanged_on_real_bank` 适配真实 bank 已带证据的状态，断言改为"只新增 1 条"）。
-- 04 章可引用的已验证 Claim 从 3 条扩到 12 条（绿的 6 + 步科 1 + 双环 3 + 行业 2），产业链维度更完整。
+- 04 章可引用的已验证 Claim 从 3 条扩到 14 条（绿的 6 + 步科 3 + 双环 4 + 行业 1），产业链维度更完整。
 - 剩 5 条待验证：GH_007/BK_001/BK_003/SH_002 待官方 datasheet，SH_003 待口径复核。
 
 ---
