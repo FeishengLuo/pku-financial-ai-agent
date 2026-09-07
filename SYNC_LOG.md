@@ -270,6 +270,7 @@
 
 | 日期 | 提交哈希 | 类型 | 一句话说明 | 推送状态 |
 |---|---|---|---|---|
+| 2026-09-07 | `feat/demo-serialized-chain` | fix/test | Demo 从并联改为串联全链路：`app.py` 调 `run_financial_chain(local_only=True)`，验证结论真实传导进财务假设与 EV（7.74/10.27/5.11，工程参数调整后）；更新 test_local_demo/test_e2e_regression 断言，新增工程→经济传导回归，全量 127 测试全绿 | ⏳ PR 待合并 |
 | 2026-09-07 | `fix/proposal-number` | docs | 评估层验收后修正：03_product 的 benchmark 数字 83.7%/82.7% → **91.8%/90.8%**（含修复前对照），消除与 07_team 的跨章不一致 | ✅ 直接推 main |
 | 2026-09-06 | `fix/verifier` | fix/test | StateVerifier 误报修复：误伤 6→0，合并准确率 83.7%/82.7% → **91.8%/90.8%**；新增 11 项 fixture 回归测试 | ✅ 已合并（0449d77，PR #4） |
 | 2026-09-05 | `c58a7fc` | feat/test/docs | Feisheng：审计状态并新增绿的谐波简化财务模型、本地无 API Demo、输入 fixture、结果文件、9 项回归测试和说明同步；PR #3 | ✅ 已合并（e157ee3） |
