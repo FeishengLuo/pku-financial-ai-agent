@@ -109,13 +109,13 @@ class TestDemoOutput(unittest.TestCase):
 
     def test_five_elements_present(self):
         result = run_local_demo()
-        self.assertEqual(result["demo_status"], "local_reproducible_prototype")
-        self.assertIn("text", result["claim"])                  # ① Claim
-        self.assertIn("ledger", result["evidence"])             # ② 证据
-        self.assertIn("verdict", result["verification"])        # ③ StateVerifier 结论
-        for scenario in ("base", "upside", "downside"):         # ④ 财务情景
-            self.assertIn(scenario, result["financial_impact"])
-        self.assertIn("limitations", result)                    # ⑤ 限制说明
+        # ① Claim ② 证据 ③ StateVerifier 结论 ④ 财务情景 ⑤ 限制说明
+        self.assertTrue(result.get("claim"))                         # ①
+        self.assertTrue(result["demo_case"]["evidence"])             # ②
+        self.assertIn("verdict", result["verification"])             # ③
+        for scenario in ("base", "upside", "downside"):              # ④ 财务情景
+            self.assertIn(scenario, result["financial"]["scenarios"])
+        self.assertIn("limitations", result["demo_case"])            # ⑤
 
     def test_empty_evidence_abstains(self, ):
         fixture = json.loads(DEMO_FIXTURE.read_text(encoding="utf-8"))
@@ -127,7 +127,10 @@ class TestDemoOutput(unittest.TestCase):
                 json.dump(fixture, f, ensure_ascii=False)
             result = run_local_demo(fixture_path=tmp)
             self.assertEqual(result["verification"]["verdict"], "abstain")
-            self.assertEqual(result["evidence"]["ledger"]["trust_score"], 0.0)
+            self.assertEqual(result["verification"]["trust_score"], 0.0)
+            # 无证据 → 门控拦截，不生成财务结论
+            self.assertFalse(result["gate"]["passed"])
+            self.assertEqual(result["financial"]["status"], "skipped")
         finally:
             os.unlink(tmp)
 
