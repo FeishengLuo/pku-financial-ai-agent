@@ -90,7 +90,9 @@ class MappingProvenanceTests(unittest.TestCase):
         self.assertAlmostEqual(assumption.elasticity, 0.30)
         self.assertAlmostEqual(
             assumption.delta_pct,
-            (20.4 / 31.2 - 1.0) * 0.30, places=6,
+            # 同业中位数 31.0：纳博特斯克 RV-20E 行因 PDF 抽取列错位
+            # （SH_003 caliber）已降级为 not_comparable，不再进入基准池
+            (20.4 / 31.0 - 1.0) * 0.30, places=6,
         )
         # 依据链四段齐全：工程参数 / ontology 规则 / 同业基准 / 行业数据
         chain = "\n".join(assumption.provenance_chain)

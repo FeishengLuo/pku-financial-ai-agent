@@ -74,6 +74,7 @@ from src.financial_model import (
     DEFAULT_INPUT_PATH,
     FORECAST_YEARS,
     FinancialModelInputs,
+    detect_product_lines,
     run_all_scenarios,
 )
 
@@ -587,14 +588,19 @@ def run_financial_chain(
         if assumption_set is not None and critic_review is not None and ontology is not None:
             try:
                 base_inputs = FinancialModelInputs.from_csv(model_inputs_csv)
+                # 产品线按模型输入 CSV 自动识别（绿的 harmonic/joint；双环 rv/gear），
+                # 保证经济映射的调整量落到该公司实际的产品线指标上
+                product_lines = detect_product_lines(base_inputs.rows)
                 adjusted_inputs = generate_financial_model_inputs(
-                    assumption_set, base_inputs, ontology=ontology)
-                adjusted_inputs.validate(FORECAST_YEARS)
+                    assumption_set, base_inputs, ontology=ontology,
+                    product_lines=product_lines)
+                adjusted_inputs.validate(FORECAST_YEARS, product_lines)
                 scenarios = run_all_scenarios(adjusted_inputs)
                 financial = {
                     "status": "ok",
                     "reason": "财务三情景已基于批判层调整后的假设生成",
                     "model_inputs_path": str(model_inputs_csv),
+                    "product_lines": product_lines,
                     "scenarios": {
                         name: {
                             "enterprise_value_bn": result["valuation"]["enterprise_value_bn"],
