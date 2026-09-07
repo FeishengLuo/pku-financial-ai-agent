@@ -11,7 +11,7 @@
 | 32.16 | 悲观EV | 03_product×1、04_case_study×5、05_business_case×1 | ✅ |
 | 60.06 | 基准EV | 03_product×1、04_case_study×4、05_business_case×1 | ✅ |
 | 86.50 | 乐观EV | 03_product×1、04_case_study×4、05_business_case×1 | ✅ |
-| 512.96 | 市值 | 01_overview×1、04_case_study×5、05_business_case×2、08_compliance×1 | ✅ |
+| 512.96 | 市值 | 01_overview×1、04_case_study×6、05_business_case×2、08_compliance×1 | ✅ |
 | 46.25 | base 2027营收 | 04_case_study×3、05_business_case×1 | ✅ |
 | 1,293 | ASP2024 | 04_case_study×3 | ✅ |
 | 1,099 | ASP2025 | 04_case_study×2 | ✅ |
@@ -29,13 +29,15 @@
 | 06_roadmap.md | C2 | — | — |
 | 07_team.md | C— | — | — |
 | 08_compliance.md | C1, C2, C3, C4, C5, C6, C8 | — | — |
+| 09_qa_playbook.md | C8 | — | — |
 
 ## 3. PR 编号引用
 
-- `03_product.md` 引用 PR：[8, 11, 13, 15]
-- `04_case_study.md` 引用 PR：[15]
-- `06_roadmap.md` 引用 PR：[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+- `03_product.md` 引用 PR：[4, 8, 11, 13, 15, 21]
+- `04_case_study.md` 引用 PR：[15, 19, 20, 21]
+- `06_roadmap.md` 引用 PR：[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
 - `07_team.md` 引用 PR：[2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13]
+- `09_qa_playbook.md` 引用 PR：[17, 19, 20]
 
 ## 4. 过时表述扫描
 
