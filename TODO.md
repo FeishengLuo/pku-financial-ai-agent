@@ -1,17 +1,17 @@
 # TODO 清单
 
 > 项目：Claim2Value（Evidence-Grounded Engineering-to-Finance Agent）
-> 更新：2026-09-06（新增 P3 项目书主线）
-> 当前结论：验证 MVP 已进入“简化财务模型 + 本地 Demo”阶段；首个本地可复现切片已实现，模型口径复核和 StateVerifier 修复仍在进行。
+> 更新：2026-09-07（Phase 3D 完成，进入答辩待命）
+> 当前结论：**Phase 3D 收尾完成**——演示脚本/路演大纲/终验清单/全局对账全部交付（PR #23–#26），回归 140 全绿 + 审校 issues=0。
 
 ## 当前基线
 
-- `main` 当前基线：`fe1bff7`（PR #21 已合并，Phase 3C 模块 1-4 完成）。
+- `main` 当前基线：PR #26 已合并（Phase 3D 四模块全部完成）。
 - 核心验证模块已存在：`evidence_ledger.py`、`state_verifier.py`、`claim_verifier.py`、`workflow.py`。
 - benchmark 已生成 98 个测试用例；规则层 + LLM pipeline 在既有评估中为 Claude 83.7%、GPT 82.7%。这些是 benchmark 判别准确率，不是现实业务准确率。
-- 当前数据：18 份 PDF、18 份 `.meta.json`、19 条 Claim、30 条专利记录、14 条参数记录。
-- 19 条 Claim 中 5 条标记为已验证、14 条待验证；Claim Bank 的 `evidence_list` 尚未回填。
-- `requirements.txt`、`tests/`、`app.py`、绿的谐波简化财务模型和本地 fixture 已实现；完整工程/经济映射模块仍未实现。
+- 当前数据：18 份 PDF、18 份 `.meta.json`、**51 条 Claim（36 已验证/15 待验证）**、30 条专利记录、14 条参数记录。
+- Claim Bank 的 `evidence_list` 已回填：已验证条目带页码级定位 + 内容指纹 + 核验人；15 条待验证条目证据为研报口径，终验清单已备。
+- `requirements.txt`、`tests/`（140 passed）、`app.py`、绿的谐波与双环传动双案例财务模型、全链路 workflow 均已实现。
 
 ## P0：下一步必须完成（当前主线）
 
@@ -60,11 +60,12 @@
 - [x] 第 5 章"商业潜力"完整初稿：TAM/SAM/SOM 三层漏斗（SAM 2–6 亿/年）、竞争格局、产能证据、估值对照、竞品定价、商业模式与三档定价、风险对冲，全部数字带 [C1]–[C8] 溯源。（PR #13）
 - [x] 展开 01–04、06–08 七章（按各 stub 内的建议结构与素材指针写）。（PR #14）
 - [x] Phase 3A 提质：机械审校脚本（锚点数字/溯源标签/PR 引用/过时表述，issues=0）；04 章升级 5→14 条已验证 + 3 个新示例（双源互证/双源逐字/产能利用率）；01/02/06/08 章末全局索引指引；SH_003 复核结论入 Claim Bank notes（项目书未引用，无正文风险）。（PR #16）
-- [ ] C7 效率实测（需人工使用数据）。
-- [ ] 15 条待验证 claim 人工终验：首批 5 条（GH_007/BK_001/BK_003/SH_002/SH_003）待官方 datasheet/口径复核；扩展 10 条媒体/研报转述待人工终验。
+- [x] C7 效率实测：`scripts/benchmark_latency.py` N=30 自动化基准，p50 4.3ms/p95 5.0ms（PR #18 首测、PR #24 修复被 smoke test 覆盖的根因并统一全仓口径）。
+- [ ] 15 条待验证 claim 人工终验：**核对清单已备好**（`docs/proposal/appendix_pending_review.md`，PR #25）——通过→改已验证补官方来源；驳回→notes 写理由。
 - [x] Phase 3C 模块 1-4：延迟基准 N=30（PR #18）、反向 DCF（PR #19）、双环全链路移植（PR #20）、Claim Bank 扩至 51 条/11 家（PR #21）。（2026-09-07）
 - [x] 答辩问答预案 `09_qa_playbook.md`（PR #22）。
-- [ ] PPT / 演示脚本（10/11 章大纲）。
+- [x] Phase 3D 模块 1-4：README 现状重写（PR #23）、演示脚本+路演大纲（PR #24）、15 条终验清单（PR #25）、全局终检+进度同步（PR #26）。
+- [ ] 演示彩排：真人按 `10_demo_script.md` 走一遍并录屏（脚本已备）。
 
 ## 文档与交付
 
