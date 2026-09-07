@@ -49,9 +49,14 @@
 | #19 | 反向 DCF（市价隐含销量预期 ≈ base 8.5 倍） | +4 → 136 |
 | #20 | 双环传动全链路移植（多产品线模型 + 规则产线级 scope） | +4 → 140 |
 | #21 | Claim Bank 横向扩展 8 家公司 +32 条（36 已验证/15 待验证） | 回归 140 passed |
+| #22 | Phase 3C 文档汇总：04/06/03/01/08 章更新 + 09 答辩问答预案（8 题） | 140 passed + 审校 0 |
+| #23 | README Phase 3C 现状重写（11 家公司 51 条 Claim、反向 DCF、双环全链路、延迟基准） | 回归 140 passed |
+| #24 | 演示脚本（10 章）+ 路演大纲（11 章）——实跑素材；修复延迟报告被 smoke test 覆盖的根因（`--out` 参数 + 测试临时路径），C7 口径统一为 p50 4.3ms/p95 5.0ms | 回归 140 passed |
+| #25 | 15 条待验证 Claim 人工终验核对表 `appendix_pending_review.md`（自动生成） | 回归 140 passed |
+| #26 | Phase 3D 终检：六模块一致性 review + SYNC_LOG/KIMICODE_PROGRESS/TODO 三处进度同步（本 PR） | 回归 140 passed + 审校 0 |
 
-**未完成项（如实标注）**：15 条待验证 Claim（首批 5 条待官方 datasheet/口径复核，
-另 10 条为媒体/研报转述待人工终验）；ontology 弹性系数为谐波标定，RV 专属标定
+**未完成项（如实标注）**：15 条待验证 Claim 待人工终验（核对清单已备好：
+`appendix_pending_review.md`，PR #25）；ontology 弹性系数为谐波标定，RV 专属标定
 待 BOM 复核（批判层已据此降置信度）；`evidence_retriever.py` 实时检索未实现；
 估值链已移植 2 家公司，第 3 家起为工程化复制（每家有财务锚点整理成本）。
 

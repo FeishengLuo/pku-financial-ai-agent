@@ -6,6 +6,27 @@
 
 ---
 
+## Phase 3D 收尾——演示作战包 + 终验清单 + 全局对账（2026-09-07，PR #23–#26）
+
+### 总览（4 个模块，分 PR 合并保证质量）
+
+| PR | 模块 | 内容 | 验证 |
+|---|---|---|---|
+| #23 | README 现状重写 | "当前进展"重写为 Phase 3C 五块现状；公司表扩至 11 家（含环动科技并入双环的口径说明）；"当前任务"指向待办 | 140 passed |
+| #24 | 演示作战包 | `10_demo_script.md`（3 分钟口播 + 1 分钟 fallback + 录屏清单，全部基于 `python app.py` 与双环链路 2026-09-07 实跑）；`11_pitch_outline.md`（12 页路演大纲）；**修复 latency_report 被 smoke test 覆盖的根因**（`benchmark_latency.py` 加 `--out`、测试改 tempfile），C7 口径统一 N=30 p50 4.3ms/p95 5.0ms | 140 passed |
+| #25 | 终验清单 | `appendix_pending_review.md`：15 条待验证 Claim 按公司分组（绿的1/步科2/双环2/五洲3/贝斯特2/恒立3/国茂1/秦川1）+ 终验操作指引（通过→改已验证补官方来源；驳回→notes 写理由） | 140 passed |
+| #26 | 全局终检 | 六模块一致性 review（README↔04 章数字、05/09 章引用、PR 表对账 git log）；06 章 PR 表补 #22–#26；SYNC_LOG/KIMICODE_PROGRESS/TODO 三处进度同步 | 140 passed + 审校 0 |
+
+### 当前状态快照
+
+- Claim Bank：51 条 / 11 家公司 / 36 已验证 / 15 待验证（终验清单已备）
+- 测试：140 passed；项目书审校：issues=0
+- 估值链：2 家公司全链路实证（绿的、双环）；反向 DCF implied 8.54×
+- **Phase 3D 完成，进入答辩待命**：剩余人工项 = ①15 条终验 ②演示彩排（脚本已备）③赛后实时检索
+- 远程过时分支建议删除（需合作者确认）：`feat/workflow-financial-chain`、`fix/state-verifier-false-positives`
+
+---
+
 ## Phase 3C 多公司扩展 + 答辩作战包（2026-09-07，PR #18–#22）
 
 ### 总览（4 个模块，分 PR 合并保证质量）
