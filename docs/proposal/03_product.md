@@ -16,11 +16,12 @@ Claim2Value 面向券商研究所、产业基金分析师，提供三种互相�
 本地 Demo（`app.py`）默认不调用 LLM、不访问网络，只读本地 fixture 运行确定性规则，
 保证可复现、可审计——这是刻意的产品决策：无证据时宁可不答，不输出黑盒结论。
 
-**（2）Claim Bank（证据链资产库，已交付 19 条 Claim）**
+**（2）Claim Bank（证据链资产库，已交付 51 条 Claim / 11 家公司）**
 以结构化 JSON（`data/processed/claim_bank_filled.json`）管理产业链分析主张，
 每条 Claim 挂接证据列表，证据含五必填字段：来源、页码/定位、原文摘录、口径说明、核验人。
-目前 19 条 Claim 中 5 条已完成真实证据回填（证据定位到年报/半年报具体页码），
-14 条待人工核验后由写回工具回填（见 3.3）。
+目前 51 条 Claim 中 36 条已完成公告原文级核验（证据定位到年报/招股书具体页码），
+15 条待验证（首批 5 条待官方 datasheet/口径复核，10 条媒体/研报转述待人工终验，
+均以低置信度+显式疑点标注呈现，见 3.3）。
 
 **（3）报告生成（证据链 + 财务影响一体化输出）**
 系统把"Claim 验证 → 证据账本 → 工程口径归一化 → 经济假设映射 → 因果批判 →
@@ -68,7 +69,7 @@ Claim2Value 面向券商研究所、产业基金分析师，提供三种互相�
 `claim_bank_writer.py` 把人工核验后的证据写回 Claim Bank：核验人字段为空即硬拒绝
 （`SKIP_EMPTY_VERIFIER`）；每条证据按 `sha256(excerpt||source)[:16]` 指纹幂等去重；
 写入采用临时文件 + `os.replace` 原子替换并自动备份。任何一条进入 Claim Bank 的证据
-都可定位到原始 PDF 的具体页码（当前 14 条已验证 Claim 均定位到公告原文页码，PR #11/#15）。
+都可定位到原始 PDF 的具体页码（当前 36 条已验证 Claim 均定位到公告原文页码，PR #11/#15/#21）。
 
 **（2）置信度分级——来源等级客观化**
 `src/evidence_ledger.py` 按 年报 > 研报 > 新闻 > 传闻 的客观等级给证据打分
@@ -113,5 +114,5 @@ prototype_scenario_not_investment_recommendation` 限定，任何引用须携带
 （`data/processed/green_harmonic_model_results.json`）。
 
 **诚实边界**：实时 Web 检索与 Claim 自动提取（`evidence_retriever.py`）、
-全量官方 datasheet、19 条 Claim 的全部回填、生产级估值模型均未完成，
-按 TODO P2 排期推进，不作为当前验收条件。
+全量官方 datasheet、15 条待验证 Claim 的人工终验、生产级估值模型均未完成，
+按 TODO P2/P3 排期推进，不作为当前验收条件。
