@@ -137,7 +137,7 @@ class TestWriteback:
         report = writeback([make_record(claim_id=real_id)], real_copy)
         assert report["written"] == 1
         bank_after = json.loads(real_copy.read_text(encoding="utf-8"))
-        assert len(bank_after) == len(bank_before) == 19
+        assert len(bank_after) == len(bank_before)  # 总数不变（不硬编码具体条数）
         changed = [c for c in bank_after if c["claim_id"] == real_id]
         assert len(changed) == 1
         # 真实 bank 的 claim 可能已带核验证据，断言只新增 1 条而非总数固定
