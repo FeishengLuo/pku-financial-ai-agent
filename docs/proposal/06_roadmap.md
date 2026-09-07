@@ -24,7 +24,7 @@
   30 条专利记录、14 条参数记录；benchmark 98 个判别用例
   （规则层 + LLM pipeline 对 Claude **91.8%** / GPT **90.8%**（StateVerifier 误报修复后；
   修复前 83.7%/82.7%），为 benchmark 判别准确率）；C7 延迟基准 N=30
-  （`benchmarks/latency_report.md`，p50 3.9ms，PR #18）。
+  （`benchmarks/latency_report.md`，p50 4.3ms，PR #18/#24 复测修正）。
 
 **质量基线**：全量 140 项回归测试通过。
 

@@ -4,13 +4,14 @@
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.benchmark_latency import run_once, FIXTURE, OUT  # noqa: E402
+from scripts.benchmark_latency import run_once, FIXTURE  # noqa: E402
 
 
 class TestLatencyBenchmark(unittest.TestCase):
@@ -23,12 +24,14 @@ class TestLatencyBenchmark(unittest.TestCase):
         self.assertLess(ms, 60_000.0)
 
     def test_script_writes_report_with_stats(self):
-        r = subprocess.run(
-            [sys.executable, str(REPO_ROOT / "scripts" / "benchmark_latency.py"),
-             "--n", "3"],
-            capture_output=True, timeout=300)
-        self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
-        report = OUT.read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "latency_report.md"
+            r = subprocess.run(
+                [sys.executable, str(REPO_ROOT / "scripts" / "benchmark_latency.py"),
+                 "--n", "3", "--out", str(out)],
+                capture_output=True, timeout=300)
+            self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
+            report = out.read_text(encoding="utf-8")
         self.assertIn("p50", report)
         self.assertIn("N | 3", report)
         self.assertIn("无 LLM、无网络", report)
