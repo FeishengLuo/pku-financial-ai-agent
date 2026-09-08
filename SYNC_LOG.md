@@ -6,6 +6,22 @@
 
 ---
 
+## 2026-09-08 本地终验与说明文件对账（本轮 commit，待推送）
+
+本轮按 Phase 3D 收尾顺序完成了本地复核，未改变合作者已合并的核心代码：
+
+- **测试基线恢复**：`requirements.txt` 补充 `pytest`；`python -m pytest tests -q` 为 **140 passed**。
+- **模型链路复核**：UTF-8 文件方式验证双环传动显式 `target_company="双环传动/环动科技"`，产生 3 条定量经济假设，产品线为 `gear/rv`，无 errors；三情景 EV 为 **5.8755 / 10.9412 / 0.4410 bn**（base/upside/downside）。此前 `n_quantitative=0` 是 PowerShell 中文内联输入编码造成的假象，未发现需要修改映射逻辑的代码缺陷。
+- **Demo 与工程校验**：绿的谐波 `python app.py` 离线 Demo、双环传动本地全链路、`python -m compileall -q src benchmarks scripts app.py`、`python scripts/audit_proposal.py`（`issues=0`）和 `git diff --check` 均通过。
+- **Claim 证据口径**：15 条待验证 Claim 仍保持待验证；本轮复核确认 WZX_002/WZX_003/HLYY_002 的媒体转述证据不应标作 `official_filing`，已降为 `news_media`，没有擅自升级任何 Claim。
+- **说明文件对账**：README、TODO、`data/README.md`、数据收集/搜索说明、项目书 03/06/07 章、终验附录和 Kimi Code 进度入口已统一为 51 条 Claim（36 已验证/15 待验证）、140 项测试、Phase 3D 完成/答辩待命；历史提交记录保留原始日期与当时数字。
+
+**仍待人工处理**：15 条 Claim 的原始官方证据终验；经济金融组对销量、ASP、BOM、税率、WACC、永续增长率及 RV ontology 弹性系数的复核；按 `10_demo_script.md` 完成真人彩排和录屏。上述事项不阻塞当前离线 Demo 与原型链路。
+
+本条记录随本轮说明/证据口径修改一并提交；本地 commit 审阅完成后推送到 fork。
+
+---
+
 ## Phase 3D 收尾——演示作战包 + 终验清单 + 全局对账（2026-09-07，PR #23–#26）
 
 ### 总览（4 个模块，分 PR 合并保证质量）

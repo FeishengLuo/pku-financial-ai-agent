@@ -44,7 +44,7 @@ data/
 
 4. **不要上传 API key、账号密码、内部未公开资料**。
 
-## 当前数据状态（2026-09-05）
+## 当前数据状态（2026-09-08）
 
 | 类别 | 当前数量/状态 | 说明 |
 |---|---:|---|
@@ -55,13 +55,13 @@ data/
 | 产品参数记录 | 14 条 | 部分字段仍为“待补充” |
 | 行业数据 | 13 条 | 工业机器人、减速器需求、国产化率等 |
 | 竞争格局数据 | 8 条 | 谐波/RV 减速器市占率 |
-| Claim | 19 条 | 5 条已验证、14 条待验证 |
-| Claim evidence_list | 0 条 | 当前验证引擎接收运行时 evidence，Claim Bank 尚未回填账本 |
+| Claim | 51 条 / 11 家公司 | 36 条已验证、15 条待人工终验 |
+| Claim evidence_list | 51 条均有记录 | 已验证条目含公告/招股书页码级定位、摘录、口径、核验人和指纹；待验证条目保留原始来源、局部证据和降级说明 |
 | 财务模型输入 | 1 个正式 CSV | `green_harmonic_model_inputs.csv` 已区分历史锚点与人工假设；模型结果不写回输入 |
 | 本地 Demo fixture | 1 个 | 绿的谐波 GH_001 的限定词缺失案例；页码仍待人工核验 |
 
-当前阶段：资料收集已足以支撑绿的谐波单案例财务模型和 Demo 原型；datasheet、专利核验和重大事项公告属于证据增强任务，不阻塞首版 Demo。
+当前阶段：资料和代码已足以支撑绿的谐波、双环传动两条本地财务影响链路及离线 Demo；15 条 Claim 仍需人工终验，官方 datasheet、专利复核和重大事项公告属于证据增强任务，不阻塞首版 Demo。
 
-注意：`claim_bank_filled.json` 与 `claim_bank_template.json` 当前仍相同，`parameter_table_filled.csv` 与 `parameter_table_template.csv` 当前仍相同；后续应在形成经过人工核验的正式数据后再分离模板与 filled 文件。
+注意：`claim_bank_filled.json` 已是当前 51 条 Claim 的结构化数据，`claim_bank_template.json` 保留早期模板；`parameter_table_filled.csv` 与模板仍有部分字段共用，新增正式数据时需继续保留来源和口径字段。
 
 财务模型输入中的情景销量、ASP、成本、费用率、税率和 DCF 参数均是原型假设，不能当作公司披露或管理层指导。详见 `TODO.md` 的验收标准。

@@ -2,7 +2,7 @@
 
 > 本章描述的工程底座已在 P1 阶段实现并开源于 GitHub 仓库
 > （github.com/aeiou0123/pku-financial-ai-agent），全部模块路径可点击验证。
-> 当前 `python -m pytest tests/ -q` 全量 **129 项回归测试通过**（2026-09-06，PR #13 基线）。
+> 当前 `python -m pytest tests -q` 全量 **140 项回归测试通过**（2026-09-08，PR #26 后基线）。
 > 未实现的能力（LLM 实时检索、全行业覆盖等）在本章如实标注为"进行中"。
 
 ## 3.1 产品形态：对话式证据链分析智能体
@@ -105,7 +105,7 @@ prototype_scenario_not_investment_recommendation` 限定，任何引用须携带
 | 本地 Demo 五要素 | `app.py` + `local_demo_fixture.json` | `tests/test_local_demo.py` |
 | PDF 数据提取 | `src/data_tools/extract_*.py` | —（提取产物已由人工抽查） |
 
-**质量证据**：全量 `python -m pytest tests/ -q` **129 passed**（约 4 秒），
+**质量证据**：全量 `python -m pytest tests -q` **140 passed**（约 6 秒），
 含 9 项端到端回归（财务可复算、输入类型隔离、Demo 五要素、无证据 abstain、
 降级路径契约）。另有自建 benchmark 98 个判别用例，规则层 + LLM pipeline
 对 Claude **91.8%**、GPT **90.8%**（StateVerifier 误报修复后；修复前为 83.7%/82.7%，

@@ -2,7 +2,7 @@
 
 > **用途**：记录 Kimi Code（代号 K3，规划/执行辅助）在本仓库完成的全部任务，方便团队其他成员随时确认"进行到哪里了"。
 > **维护方式**：K3 每完成一个 Phase 后更新本文件 + SYNC_LOG.md，直接推送到 main。
-> **最后更新**：2026-09-07（Phase 3D 交付后，进入答辩待命）
+> **最后更新**：2026-09-08（Phase 3D 交付后，完成本地终验）
 
 ---
 
@@ -16,7 +16,7 @@
 | 技术管线 | 全链路：engineering_analyzer → economic_mapper → causal_critic → workflow；估值链已移植 2 家公司（绿的、双环）；反向 DCF implied 8.54×（PR #19） |
 | 演示 | 3 分钟口播脚本 + 1 分钟 fallback + 录屏清单（`10_demo_script.md`，PR #24），全部基于 2026-09-07 实跑；延迟 N=30 p50 4.3ms/p95 5.0ms |
 | 测试 | 140 passed，全绿 |
-| **下一步** | **答辩待命**。剩余人工项：①15 条待验证 Claim 人工终验（清单已备）②演示彩排（脚本已备）③赛后 live 检索（evidence_retriever） |
+| **下一步** | **答辩待命**。本地终验已完成；剩余人工项：①15 条待验证 Claim 人工终验（清单已备）②经济金融组复核模型与 RV ontology 口径③演示彩排（脚本已备）④赛后 live 检索（evidence_retriever） |
 
 ## 二、PR 历史（K3 经手的全部提交，倒序）
 
@@ -83,3 +83,5 @@ PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python app.py   # 本地全链路 demo（无
 ```
 
 Claim Bank 状态：`data/processed/claim_bank_filled.json`（51 条：36 已验证 / 15 待验证）。
+
+本地终验（2026-09-08）：`140 passed`、`audit_proposal.py issues=0`、编译检查通过；绿的谐波与双环传动离线链路均已复跑。双环显式目标公司 `双环传动/环动科技` 产生 3 条定量假设，三情景 EV 为 5.8755 / 10.9412 / 0.4410 bn。

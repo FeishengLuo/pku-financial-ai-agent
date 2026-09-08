@@ -4,7 +4,7 @@
 > 搜索人：Claude Code
 > 说明：本报告如实记录搜索过程中找到和未找到的资料。
 
-> **当前使用说明（2026-09-05）**：本报告是资料审计和缺口记录，不是“全部资料已核验”的证明。现有资料已足以启动绿的谐波简化财务模型与本地 Demo；首版应优先从年报/研报中建立少量带定位的 evidence fixture。第七节列出的 datasheet、专利、重大事项公告、财务模型输入和 BOM 仍需补充，但不阻塞首版本地流程。
+> **当前使用说明（2026-09-08）**：本报告是资料审计和缺口记录，不是“全部资料已核验”的证明。现有资料已足以运行绿的谐波与双环传动本地财务链路及 Demo；当前新增资料优先服务于模型口径复核、Claim 人工终验和答辩。第七节列出的 datasheet、专利、重大事项公告和 BOM 仍需补充，但不阻塞首版本地流程。
 
 ---
 
@@ -165,7 +165,7 @@
 
 ### 6.3 Claim 素材
 
-- 自动扫描 18 份 txt 报告，生成 421 条候选 claim，人工筛选出 19 条：
+- 早期自动扫描 18 份 txt 报告，生成 421 条候选 claim，首批人工筛选出 19 条；当前 Claim Bank 已扩展为 51 条，详见 `data/processed/claim_bank_filled.json`：
   - 绿的谐波 7 条（技术性能 3、产能/需求 2、财务 2）
   - 步科股份 5 条（技术性能 1、产能/需求 1、客户 1、财务 2）
   - 双环传动/环动科技 6 条（技术性能 1、产能/需求 2、客户 1、财务 2）
@@ -183,8 +183,8 @@
 
 ## 七、仍建议手动补充的资料
 
-1. **P0—财务模型输入**：基于年报数据填写 `data/processed/financial_model_inputs_template.csv`，为每个字段增加来源定位，并将人工假设与计算结果分开。
-2. **P0—本地 evidence fixture**：从主案例中选取少量 Claim，补齐原文摘录、页码/定位、口径和预期 verdict；当前 Claim Bank 的 `evidence_list` 仍为空。
+1. **模型与工程口径复核**：复核 `green_harmonic_model_inputs.csv`、`shuanghuan_model_inputs.csv` 的销量、ASP、BOM、税率、WACC、永续增长率，并复核 RV ontology 弹性系数；当前均明确标注为原型假设。
+2. **15 条 Claim 人工终验**：按 `docs/proposal/appendix_pending_review.md` 逐条核对原始 PDF、摘录、页码和口径；通过后才将对应条目升级为已验证，无法确认则保留待验证。
 3. **P2—官方 datasheet**：绿的谐波 LCS/LHS/Y 系列、步科 FMK 完整选型手册、环动科技 RV 减速器样本。
 4. **P2—步科核心发明专利**：目前公开检索以实用新型为主，需通过 CNIPA/Google Patents 或招股书核对发明专利。
 5. **P2—重大事项公告和 BOM**：绿的谐波定增/募投/股权激励、步科/双环客户合作公告，以及基于研报和行业数据填写 `data/processed/bom_template.csv`。

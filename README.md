@@ -12,9 +12,9 @@ Claim2Value（Evidence-Grounded Engineering-to-Finance Agent）面向产业链�
 
 > 产品不是专用工具，而是通用 Agent。三个案例分别验证**技术性能、产能需求、客户订单**三类典型 claim。
 
-## 当前进展（2026-09-07，Phase 3C 完成 / Phase 3D 收尾中）
+## 当前进展（2026-09-08，Phase 3D 完成 / 答辩待命）
 
-代码、数据与文档已收口至交付前状态，质量线：**140 个回归测试全过 + 提案审校脚本 0 issue**（`python scripts/audit_proposal.py`）。PR #2–#22 全部合并到 `main`，当前能力全景：
+代码、数据与文档已收口至交付前状态，质量线：**140 个回归测试全过 + 提案审校脚本 0 issue**（`python -m pytest tests -q`、`python scripts/audit_proposal.py`）。PR #2–#26 全部合并到 `main`，当前能力全景：
 
 **1. 多公司证据网络（PR #15/#21）**：Claim Bank 扩展至 **11 家机器人产业链公司 51 条结构化 claim**——36 条已验证（公告原文级，附页码与内容指纹，BK_004 双源逐字、GH_002 双源互证），15 条待验证（带显式定义疑点，终验核对清单 `docs/proposal/appendix_pending_review.md` 由 Phase 3D 新增）；另有 1 条行业市场数据（IND_001）。
 
@@ -89,10 +89,10 @@ cd pku-financial-ai-agent
 
 ### 3. 阅读核心文档
 
-1. `data/search_guide.md` —— 案例搜索方案
+1. `docs/KIMICODE_PROGRESS.md` —— 30 秒项目进度入口
 2. `data/collection_checklist.md` —— 数据收集清单
-3. `research_materials/notes/feasibility_analysis_and_plan.md` —— 执行计划
-4. `src/case.py` —— 通用案例抽象层
+3. `data/search_report.md` —— 已完成资料与人工补充清单
+4. `src/workflow.py` —— 验证到财务影响的串联链路
 
 ### 4. 运行当前验证 MVP
 
@@ -111,10 +111,10 @@ python -m src.claim_verifier --no-llm --limit 98
 安装依赖后，财务模型使用带来源标签的本地输入，输出三种情景：
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python -m src.financial_model
 python app.py --json-out data/processed/local_demo_result.json
-python -m unittest discover -s tests -v
+python -m pytest tests -q
 ```
 
 模型输出：
@@ -221,11 +221,12 @@ API key、`.env`、`*.pdf`（研究报告类）、第三方仓库代码、Python
 
 > 注意：公司公告/研报 PDF 在 `data/raw/` 下是**要提交**的，它们有 `.meta.json` 记录来源。
 
-## 当前任务（Phase 3D 收尾）
+## 当前任务（Phase 3D 完成后的交付准备）
 
 1. 15 条待验证 Claim 人工终验（核对清单已备好：`docs/proposal/appendix_pending_review.md`）；
-2. 演示彩排：按 `docs/proposal/10_demo_script.md` 走一遍 3 分钟版 + fallback 版；
-3. 赛后增强（非阻塞）：实时检索、专利核验全覆盖、更多产业链公司接入。
+2. 经济金融组复核模型输入、BOM、税率、DCF 与 RV ontology 参数；
+3. 演示彩排：按 `docs/proposal/10_demo_script.md` 走一遍 3 分钟版 + fallback 版；
+4. 赛后增强（非阻塞）：实时检索、专利核验全覆盖、更多产业链公司接入。
 
 首版 Demo 已覆盖绿的谐波本地单案例流程与双环传动全链路估值链；不以实时检索、全行业覆盖或全部 Claim 核验为阻塞条件。
 

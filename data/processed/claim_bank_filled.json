@@ -980,7 +980,7 @@
     "caliber": "数字出自公司正式公告但经媒体转述获取、未直接核对上交所公告PDF；'680万元'为含税开票口径且含汽车类丝杠，非纯机器人丝杠口径；占比为占2023年营收",
     "verifier": "经济金融组复核",
     "verified_at": "2026-09-07",
-    "evidence_level": "official_filing",
+    "evidence_level": "news_media",
     "fingerprint": "dc1e5f384d29b317"
    }
   ],
@@ -1008,7 +1008,7 @@
     "caliber": "为'拟投资'计划数而非已投入金额，经媒体转述公告获取、未直接核对公告PDF；后续实际投资额可能调整",
     "verifier": "经济金融组复核",
     "verified_at": "2026-09-07",
-    "evidence_level": "official_filing",
+    "evidence_level": "news_media",
     "fingerprint": "dc12beff90f7cc2d"
    }
   ],
@@ -1204,7 +1204,7 @@
     "caliber": "媒体转述权益分派实施公告，未直接核对公告原文；以当时总股本计算",
     "verifier": "经济金融组复核",
     "verified_at": "2026-09-07",
-    "evidence_level": "official_filing",
+    "evidence_level": "news_media",
     "fingerprint": "52fd59b1d10c9763"
    }
   ],
