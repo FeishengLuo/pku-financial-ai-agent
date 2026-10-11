@@ -34,6 +34,29 @@ def safe_name(name: str) -> str:
     return "source_" + base
 
 
+def upload_issues(uploads: list[tuple[str, bytes]]) -> list[str]:
+    """Show all intake problems before creating a run or making model requests."""
+    issues = []
+    if len(uploads) > 10:
+        issues.append(f'已选 {len(uploads)} 个文件；每次最多10个，请分批处理。')
+    total = sum(len(raw) for _, raw in uploads)
+    if total > MAX_TOTAL_BYTES:
+        issues.append(f'总大小 {total / 1024**2:.1f} MB；上限60 MB，请缩小材料范围。')
+    used = set()
+    for name, raw in uploads:
+        if not raw:
+            issues.append(f'{name} 是空文件，请重新导出有内容的文件。')
+        elif len(raw) > MAX_BYTES:
+            issues.append(f'{name} 超过20 MB，请拆分后上传；保留原件页码对应关系。')
+        key = safe_name(name).casefold().rstrip('. ')
+        if key in used:
+            issues.append(f'{name} 与另一文件保存后的名称冲突，请重命名后上传。')
+        used.add(key)
+        if Path(name).suffix.lower() not in {'.pdf','.docx','.txt','.md','.csv','.xlsx'}:
+            issues.append(f'{name} 格式暂不支持；请选择PDF、Word、文本、CSV或Excel文件。')
+    return issues
+
+
 def decode(data: bytes) -> str:
     for encoding in ("utf-8-sig", "gb18030"):
         try:

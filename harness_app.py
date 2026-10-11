@@ -16,7 +16,7 @@ import streamlit as st
 # Streamlit can rerun this entrypoint while retaining imported modules. Refresh only
 # changed local tool files, in dependency order; no process restart or credential reset.
 for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'assistance', 'financial', 'diagnostics', 'research',
-                    'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'experience'):
+                    'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'results', 'experience'):
     module = importlib.import_module('src.harness.' + module_name)
     source_hash = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
     if getattr(module, '_c2v_loaded_source_hash', None) != source_hash:
@@ -25,7 +25,7 @@ for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'assist
 
 from src.financial_intake import FIELDS
 from src.harness.api import ModelClient, api_endpoints, redact
-from src.harness.documents import parse, table, digest, safe_name, chunks
+from src.harness.documents import parse, table, digest, safe_name, chunks, upload_issues
 from src.harness.engine import propose_quant, draft_commentary
 from src.harness.financial import extract, check_financial, dcf, save_dcf, parse_forecasts
 from src.harness.diagnostics import comparison_groups, earnings_bridge, save_diagnostics
@@ -35,7 +35,7 @@ from src.harness.strategy_diagnostics import diagnose
 from src.harness.store import Run
 from src.review_ui import page_heading, section_heading
 from src.harness import experience
-from src.harness import providers, assistance
+from src.harness import providers, assistance, results
 
 ROOT = Path(__file__).resolve().parent
 st.set_page_config(page_title="Claim2Value · 研究工作台", layout="wide")
@@ -272,13 +272,7 @@ def show_outputs():
     st.download_button("下载本次成果 ZIP", run.bundle(), file_name="Claim2Value_" + run.path.name + ".zip", mime="application/zip",
                        key="download_" + run.path.name)
     st.caption('当前状态：' + experience.STATUS.get(run.metadata['status'], '处理记录已保存'))
-    report_names = ('financial_report.md','quant_report.md','thesis_review.md','realization_conditions.md','valuation.md')
-    for name in report_names:
-        path = run.path/'outputs'/name
-        if path.is_file():
-            with st.expander('报告预览 · ' + {'financial_report.md':'财务核验','quant_report.md':'回测说明','thesis_review.md':'观点检查','realization_conditions.md':'估值情景','valuation.md':'现金流估值'}[name]):
-                st.text(path.read_text(encoding='utf-8')[:20000])
-                st.caption('完整报告随成果ZIP下载；这里展示前20,000字符。')
+    results.render_snapshot(run.path,run.metadata,'current_'+run.path.name)
     with st.expander('文件清单与运行详情'):
         st.caption('运行编号：' + run.path.name)
         st.caption(str(run.path))
@@ -298,6 +292,13 @@ if not uploads:
         path = examples / name
         if path.exists():
             st.download_button("下载示例 · " + name, path.read_bytes(), file_name=name)
+    st.stop()
+
+problems = upload_issues(uploads)
+if problems:
+    st.error('材料还不能读取。修正下面的问题后重新上传，尚未发送模型请求。')
+    for problem in problems:
+        st.write('• ' + problem)
     st.stop()
 
 if workflow.startswith("财务"):
@@ -447,7 +448,9 @@ if workflow.startswith("财务"):
             normalized, quality = st.session_state["financial_result"]
             if quality["errors"]:
                 st.error("校验未通过。请修正后再次生成。")
-                st.json(quality["errors"])
+                st.dataframe(pd.DataFrame(results.financial_problems(quality['errors'])),hide_index=True,use_container_width=True)
+                with st.expander('查看完整校验问题'):
+                    st.json(quality['errors'])
             else:
                 st.success(f"已生成 {len(normalized)} 条标准化记录。来源真实性仍以原件核对为准。")
                 st.dataframe(pd.DataFrame(normalized)[['company','report_period','metric_original','value_cny']].rename(columns={**experience.FIELD_LABELS,'value_cny':'标准金额（元）'}), hide_index=True)

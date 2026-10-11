@@ -19,6 +19,7 @@ from .documents import digest, table
 from .quant import prepare, backtest, save
 from .conditions import forward, save_conditions
 from .store import Run
+from . import results
 
 TASKS = {
     'industry': {'title': '检查研究观点', 'direction': '财务／估值研究', 'mode': '论点审查与兑现条件',
@@ -87,9 +88,13 @@ html, body, [data-testid="stAppViewContainer"] { font-family:'Microsoft YaHei','
 [data-testid="stSidebar"] [data-testid="stRadioOption"]:has(input:checked) { background:#e7e7e2; border-left-color:var(--accent); }
 [data-testid="stSidebar"] [data-testid="stRadioOption"]:focus-within { outline:2px solid var(--accent); outline-offset:2px; }
 [data-testid="stWidgetLabel"] p { font-size:13px; color:var(--ink); }
-[data-testid="stCaptionContainer"], .desk-meta { color:var(--muted); font-size:12px; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p, .desk-meta { color:var(--muted); font-size:12px; }
+[data-testid="stCaptionContainer"] { opacity:1; }
 [data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="textarea"] { background:#fafaf8; border-color:#c9cbc7; border-radius:3px; }
 [data-baseweb="input"] > div, [data-baseweb="textarea"] > div { background:#fafaf8; }
+[data-baseweb="input"]:focus-within, [data-baseweb="textarea"]:focus-within { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+[role="tab"][aria-selected="true"] { color:var(--ink); }
+[data-baseweb="tab-highlight"] { background-color:var(--ink); }
 [data-baseweb="textarea"] textarea { font-size:14px; line-height:1.7; }
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primaryFormSubmit"] { background:var(--ink); color:#fff; border-color:var(--ink); border-radius:3px; }
 [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseButton-primaryFormSubmit"]:hover { background:#45474a; color:#fff; border-color:#45474a; }
@@ -127,6 +132,9 @@ html, body, [data-testid="stAppViewContainer"] { font-family:'Microsoft YaHei','
  [class*="st-key-task_row_"] [data-testid="stHorizontalBlock"] { gap:16px; }
  .desk-row-label { margin-bottom:3px; }
  .c2v-section { flex-wrap:wrap; }
+ [data-testid^="stBaseButton"] { min-height:44px; }
+ [class*="st-key-start_"] button { min-height:44px; }
+ [data-testid="stRadioOption"], [data-testid="stCheckbox"] label { min-height:44px; }
 }
 @media(prefers-reduced-motion:reduce) { *, *::before, *::after { transition:none !important; animation:none !important; } }
 </style>'''
@@ -150,8 +158,12 @@ def steps(current, labels=('说明问题', '准备材料', '核对与运行', '�
 
 
 def stage(state, uploads, question):
-    if any(state.get(key) for key in ('result','research_review','candidates','dcf_result','conditions_result','financial_result')):
+    financial = state.get('financial_result')
+    if any(state.get(key) for key in ('result','research_review','dcf_result','conditions_result')) or (
+            financial and not financial[1].get('errors')):
         return 3
+    if state.get('candidates') or financial:
+        return 2
     return 2 if uploads and question.strip() else 1 if question.strip() else 0
 
 
@@ -318,18 +330,42 @@ def history(root):
     st.title('成果记录')
     st.write('找回这台电脑保存的研究输出。这里可以下载历史快照；继续模型任务仍需保留原来的浏览器会话。')
     runs_root = root/'work/harness_runs'
-    records = saved_runs(runs_root)
+    records = saved_runs(runs_root, limit=200)
     if not records:
         st.info('还没有成果。先打开教程运行一次本地样例，或进入工作区处理自己的材料。')
         return
-    labels = {'industry_research':'观点检查','financial':'财务整理','quant':'策略回测','realization_conditions':'情景估值',
-              'tutorial_quant':'合成回测样例','tutorial_conditions':'合成估值样例','valuation':'现金流估值','strategy_diagnostics':'策略诊断','quant_data_check':'回测数据体检'}
-    chosen = st.selectbox('选择本机保存的记录（最近40条）', range(len(records)),
-        format_func=lambda i: records[i]['id'] + ' · ' + labels.get(records[i]['workflow'],'研究记录') + ' · ' + STATUS.get(records[i]['status'],'处理记录'))
-    metadata = records[chosen]
-    st.write('输入：' + ('、'.join(str(item.get('name','')) for item in metadata['inputs']) or '本地合成假设'))
+    query = st.text_input('搜索记录', placeholder='输入文件名、研究问题或记录编号')
+    kind = st.selectbox('任务类型',['全部'] + sorted({results.WORKFLOWS.get(r['workflow'],'研究记录') for r in records}))
+    options = []
+    for record in records:
+        try:
+            path = results.snapshot_path(runs_root,record['id'])
+            title = results.record_title(record,path)
+        except (ValueError,OSError):
+            continue
+        module = results.WORKFLOWS.get(record['workflow'],'研究记录')
+        text = ' '.join([title,record['id'],module] + [str(i.get('name','')) for i in record['inputs']])
+        if (kind == '全部' or kind == module) and query.strip().casefold() in text.casefold():
+            options.append((record,path,title))
+    st.caption(f'最近200条本机记录中找到 {len(options)} 条；不会修改旧快照。')
+    if not options:
+        st.info('没有匹配记录。清空搜索词或把任务类型改为“全部”。')
+        return
+    chosen = st.selectbox('选择研究记录', range(len(options)),
+        format_func=lambda i: results.local_time(options[i][0]) + ' · ' + options[i][2][:60] + ' · ' + options[i][0]['id'][-6:])
+    metadata,path,title = options[chosen]
+    st.subheader(re.sub(r'([\\`*{}\[\]()#+.!<>_])',r'\\\1',title))
+    st.caption(results.WORKFLOWS.get(metadata['workflow'],'研究记录') + ' · 北京时间 ' + results.local_time(metadata) +
+               ' · ' + STATUS.get(metadata['status'],'处理记录已保存'))
+    st.text('输入：' + ('、'.join(str(item.get('name','')) for item in metadata['inputs']) or '没有上传原件；请按下方标记判断是否为合成样例'))
     st.caption('输出只对应这次快照。分享前请核对商业数据和原文摘录的权限。')
-    st.download_button('下载这次记录', saved_bundle(runs_root, metadata['id']), file_name='Claim2Value_' + metadata['id'] + '.zip')
+    try:
+        st.download_button('下载这次记录', saved_bundle(runs_root, metadata['id']), file_name='Claim2Value_' + metadata['id'] + '.zip')
+        results.render_snapshot(path,metadata,'history_'+metadata['id'])
+    except (ValueError,OSError):
+        st.error('这条记录无法完整读取，请检查本机文件是否损坏或移动。原有记录未被修改。')
+    with st.expander('记录位置'):
+        st.caption(str(path))
 
 
 def task_help(task):
