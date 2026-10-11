@@ -15,6 +15,8 @@ from .conditions import confirm_parameter, forward, reverse, sensitivity, save_c
 from .documents import parse, digest, MAX_CHARS, MAX_PAGES
 from .research import document_scope, plan_thesis, review_thesis, validate_plan, local_plan
 from .store import Run
+from .assistance import evidence_actions, FACT_TYPES, REVIEW_STATUS
+from .exports import workbook
 
 
 def render(root, uploads, question, make_client):
@@ -144,12 +146,20 @@ def render(root, uploads, question, make_client):
     if reviewed:
         if not reviewed.get('complete', False):
             st.warning('这里只展示已完成条件，不能将结果称为完整论点审查。')
+        actions = evidence_actions(reviewed, plan)
+        st.subheader('下一步需要核对什么')
+        st.caption('把冲突、未运行条件和材料缺口整理成工作清单；模型提出的缺口仍需核实，未覆盖不代表现实中不存在。')
+        st.dataframe(actions, hide_index=True)
+        action_file = workbook({'待核对事项':actions})
+        get_run().write('research_actions.xlsx', action_file)
+        get_run().write('research_actions.json', actions.to_dict('records'))
+        st.download_button('下载待核对事项清单', action_file, file_name='研究待核对事项.xlsx')
         st.subheader('2　核对支持材料、反证与参数候选')
         for assessment in reviewed['assessments']:
-            with st.expander(assessment['condition']['label'] + ' · ' + assessment['status'], expanded=True):
+            with st.expander(assessment['condition']['label'] + ' · ' + REVIEW_STATUS.get(assessment['status'], '待核对'), expanded=True):
                 for row in assessment['evidence']:
                     evidence[row['id']] = row
-                    st.markdown('**' + {'supports': '支持候选', 'contradicts': '反证候选', 'context': '背景'}[row['stance']] + '** · ' + row['fact_type'])
+                    st.markdown('**' + {'supports': '支持候选', 'contradicts': '反证候选', 'context': '背景'}[row['stance']] + '** · ' + FACT_TYPES.get(row['fact_type'], row['fact_type']))
                     st.text(row['quote'])
                     st.caption(row['id'] + ' · ' + row['source_file'] + ' · ' + row['source_locator'] + ' · ' + row['metadata']['published_at'])
                     st.write(row['explanation'])
@@ -170,7 +180,8 @@ def render(root, uploads, question, make_client):
                 suffix = binding + review_binding + parameter['id']
                 st.text(parameter['key'] + ' · ' + parameter['value_text'] + ' ' + parameter['unit'] + ' · ' + parameter['quote'])
                 fact_type = st.selectbox('原文性质 · ' + parameter['id'], ['historical', 'forecast', 'commitment', 'opinion'],
-                                        index=['historical', 'forecast', 'commitment', 'opinion'].index(parameter['fact_type']), key='fact_' + suffix)
+                                        index=['historical', 'forecast', 'commitment', 'opinion'].index(parameter['fact_type']), key='fact_' + suffix,
+                                        format_func=lambda value: FACT_TYPES[value])
                 approved = st.checkbox('确认参数 · ' + parameter['id'], key='approve_' + suffix)
                 approval.append({'id': parameter['id'], 'fact_type': fact_type, '确认': approved})
             approval_hash = digest(json.dumps(approval, sort_keys=True, ensure_ascii=False).encode())

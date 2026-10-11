@@ -161,13 +161,19 @@ class ModelClient:
     def endpoint(self) -> str:
         return api_endpoints(self.base_url, self.protocol)['completion']
 
+    def _client_headers(self) -> dict:
+        headers = {'User-Agent': USER_AGENT}
+        if urllib.parse.urlsplit(self.base_url).hostname == 'generativelanguage.googleapis.com':
+            headers['x-goog-api-client'] = USER_AGENT
+        return headers
+
     def list_models(self) -> dict:
         """One explicit GET, with no prompt, model requirement, retries or redirects."""
         if self.calls >= self.max_calls:
             raise APIError('本次操作已达到请求上限。')
         self.calls += 1
         endpoint = api_endpoints(self.base_url, self.protocol)['models']
-        headers = {'Accept': 'application/json', 'User-Agent': USER_AGENT}
+        headers = {'Accept': 'application/json', **self._client_headers()}
         if self.protocol == 'openai':
             headers['Authorization'] = 'Bearer ' + self.api_key
         else:
@@ -244,8 +250,10 @@ class ModelClient:
         if self.calls >= self.max_calls:
             raise APIError("本轮请求预算已达到上限；已完成批次保留，下次继续只处理未完成批次。", kind='budget')
         self.calls += 1
-        payload = {"model": self.model, "max_tokens": limit, "stream": False}
-        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
+        host = urllib.parse.urlsplit(self.base_url).hostname
+        token_parameter = 'max_completion_tokens' if self.protocol == 'openai' and host in {'api.openai.com', 'api.minimax.io', 'api.minimax.cn'} else 'max_tokens'
+        payload = {"model": self.model, token_parameter: limit, "stream": False}
+        headers = {"Content-Type": "application/json", **self._client_headers()}
         if self.protocol == "openai":
             payload["messages"] = [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
             headers["Authorization"] = "Bearer " + self.api_key
@@ -328,8 +336,11 @@ class ModelClient:
                     time.sleep(delay)
 
     def test_connection(self) -> dict:
+        # Reasoning models may spend their token budget before returning visible text.
+        host = urllib.parse.urlsplit(self.base_url).hostname
+        probe_limit = 2048 if host in {'api.openai.com', 'api.minimax.io', 'api.minimax.cn'} else 256
         result = self._complete("This is a connection test. Reply only OK. Do not use tools.", "Reply OK.",
-                                limit=256, timeout=30, probe=True)
+                                limit=probe_limit, timeout=30, probe=True)
         return {"status": "connected", "http_status": 200, "endpoint": self.endpoint, "model": self.model,
                 "protocol": self.protocol, "elapsed_seconds": result["elapsed_seconds"], "usage": result["usage"],
                 "text_response_received": bool(result["content"]), "finish_reason": result["finish"],

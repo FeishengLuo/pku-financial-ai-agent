@@ -1,3 +1,5 @@
+> 2026-10-11模型与研究成果更新：新增主流服务和套餐说明、三步连接指南、研究待核对事项清单，以及无API量化数据体检。配置依据、真实测试边界和用途见[连接指南](docs/harness/model_connections_20261011.md)、[工作台用途](docs/harness/product_value_20261011.md)、[本轮Review](docs/harness/provider_product_20261011/review.md)。继续使用现有测试分支；新工作台尚未重建旧01—07材料。
+
 > 2026-10-11界面调整：任务改按行排列，列出材料和输出；统一工作区排版，减少装饰与卡片，保留教程。手机侧栏导航与键盘任务入口已实测。[设计参考与本次检查](docs/harness/frontend_design_20261011/review.md)。
 
 > 2026-10-11使用体验更新：按问题选择任务，页面内教程与样例、本地计算体验、按需开启高级参数、中文财务列和成果找回。[第一次使用](docs/harness/getting_started.md)，[本轮Review](docs/harness/customer_experience_review_20261011.md)。Windows启动后先进入任务首页，实际服务商研究质量与真人效果仍需验证。

@@ -1,5 +1,7 @@
 # 当前从这里开始
 
+2026-10-11模型与成果更新：预设覆盖更多国内外API和套餐说明，新增“模型与套餐”新手入口、研究待核对事项Excel和本地量化数据体检。[连接指南](docs/harness/model_connections_20261011.md)、[用途与边界](docs/harness/product_value_20261011.md)、[本轮检查](docs/harness/provider_product_20261011/review.md)。继续拉取 `industry-research-harness-20261010`；预设不代表逐家真实联通或模型质量验证。
+
 2026-10-11界面调整：研究任务按行排列，材料和输出并列展示；工作台采用独立样式，手机侧栏和键盘入口实测可用。[本次设计与检查](docs/harness/frontend_design_20261011/review.md)。测试继续使用 `industry-research-harness-20261010` 分支。
 
 2026-10-11使用体验调整：默认任务首页，新增教程与直接载入样例、无API本地计算体验、成果记录下载。估值和策略诊断按需开启，常用财务列改用中文展示；原有核验要求保留。[入门教程](docs/harness/getting_started.md)、[本轮Review](docs/harness/customer_experience_review_20261011.md)。同学继续拉取 `industry-research-harness-20261010`；没有重建旧01—07正式材料。

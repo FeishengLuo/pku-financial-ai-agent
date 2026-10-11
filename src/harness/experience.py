@@ -51,7 +51,7 @@ STATUS = {'created':'已建立记录','documents_parsed':'材料已读取','extr
     'awaiting_review':'候选待核对','financial_completed':'财务结果已生成','financial_blocked':'财务字段待修正',
     'valuation_completed':'假设估值已生成','quant_completed':'回测已完成','quant_failed':'回测未完成',
     'thesis_review_awaiting_human_confirmation':'观点检查已完成，待核对','thesis_review_interrupted':'观点检查部分完成',
-    'realization_conditions_computed':'情景计算已完成'}
+    'realization_conditions_computed':'情景计算已完成', 'quant_data_checked':'数据体检已完成'}
 
 STYLE = '''<style>
 :root { --paper:#fff; --ink:#25272b; --muted:#62666b; --line:#dededb; --accent:#763b32; }
@@ -177,6 +177,11 @@ def home():
             st.button('打开教程与样例', on_click=lambda: st.session_state.update(desk_page='教程与示例'))
     with st.expander('使用范围与数据去向'):
         st.write('本地核验和回测无需模型。自动整理和证据检查使用你配置的模型；点击调用时，相关文字会发送给该服务。上传原件保存在本机。当前不含在线数据库查询和自动交易。')
+    with st.expander('这些任务解决什么问题？'):
+        st.write('观点检查：把公司叙述拆成条件，在上传材料中找支持与反证，导出需要核对和补材料的清单。适合准备研究底稿。')
+        st.write('财务整理：保留单位、报表范围、披露日和原文位置，校验金额并解释两期盈利变化。需要原件核对，不能把模型摘录直接当事实。')
+        st.write('策略测试：先体检行情与因子数据，再按明确规则计算净值、回撤和交易费用，比较同费率基准。适合发现策略与数据的问题。')
+        st.write('当前更适合研究助理、投研学习和量化原型。自动获取行情、实盘交易、扫描文件 OCR、多用户协作和跨会话继续模型任务尚未实现。')
 
 
 def guide(root):
@@ -191,6 +196,10 @@ def guide(root):
         st.write('2. 写清公司、期间或策略规则，按提示核对来源和字段。')
         st.write('3. 运行后检查缺口；模型候选需对照原件，未来参数需自行确认。')
         st.write('4. 下载：' + item['output'] + '；在“成果记录”找回本机已保存的输出。')
+        if selected == 'quant':
+            st.write('首次上传先点“检查数据（不调用模型）”，下载问题清单。它不修改原数据，修正后重新体检；检查通过后再确认交易假设并回测。')
+        elif selected == 'industry':
+            st.write('证据审查后先看“下一步需要核对什么”，下载待核对事项；优先处理冲突、材料缺口和未完成条件。')
         st.code(item['prompt'], language=None)
         st.button('用这组样例进入工作区', type='primary', on_click=select_task, args=(selected, True))
         for name in item['files']:
@@ -314,7 +323,7 @@ def history(root):
         st.info('还没有成果。先打开教程运行一次本地样例，或进入工作区处理自己的材料。')
         return
     labels = {'industry_research':'观点检查','financial':'财务整理','quant':'策略回测','realization_conditions':'情景估值',
-              'tutorial_quant':'合成回测样例','tutorial_conditions':'合成估值样例','valuation':'现金流估值','strategy_diagnostics':'策略诊断'}
+              'tutorial_quant':'合成回测样例','tutorial_conditions':'合成估值样例','valuation':'现金流估值','strategy_diagnostics':'策略诊断','quant_data_check':'回测数据体检'}
     chosen = st.selectbox('选择本机保存的记录（最近40条）', range(len(records)),
         format_func=lambda i: records[i]['id'] + ' · ' + labels.get(records[i]['workflow'],'研究记录') + ' · ' + STATUS.get(records[i]['status'],'处理记录'))
     metadata = records[chosen]

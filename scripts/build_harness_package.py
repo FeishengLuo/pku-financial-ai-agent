@@ -31,7 +31,9 @@ def main():
     receipt = {"path": str(archive_path), "members": len(manifest) + 1, "bytes": archive_path.stat().st_size,
                "sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(), "member_hashes": "passed",
                "original_uploads_included": False, "real_api_verified_by_automated_checks": False,
-               "provider_validation_record": "docs/harness/connection_review_20261010.md"}
+               "provider_validation_record": "docs/harness/connection_review_20261010.md",
+               "provider_configuration_record": "docs/harness/model_connections_20261011.md",
+               "product_review_record": "docs/harness/provider_product_20261011/review.md"}
     (destination / "package_receipt.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(receipt, ensure_ascii=False))
 

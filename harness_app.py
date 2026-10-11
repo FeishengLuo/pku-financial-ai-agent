@@ -15,7 +15,7 @@ import streamlit as st
 
 # Streamlit can rerun this entrypoint while retaining imported modules. Refresh only
 # changed local tool files, in dependency order; no process restart or credential reset.
-for module_name in ('documents', 'store', 'api', 'exports', 'financial', 'diagnostics', 'research',
+for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'assistance', 'financial', 'diagnostics', 'research',
                     'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'experience'):
     module = importlib.import_module('src.harness.' + module_name)
     source_hash = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
@@ -35,6 +35,7 @@ from src.harness.strategy_diagnostics import diagnose
 from src.harness.store import Run
 from src.review_ui import page_heading, section_heading
 from src.harness import experience
+from src.harness import providers, assistance
 
 ROOT = Path(__file__).resolve().parent
 st.set_page_config(page_title="Claim2Value · 研究工作台", layout="wide")
@@ -42,6 +43,9 @@ st.markdown(experience.STYLE, unsafe_allow_html=True)
 
 
 def client(*, require_model: bool = True) -> ModelClient:
+    blocker = providers.connection_blocker(st.session_state.get('api_preset', '自定义'))
+    if blocker:
+        raise ValueError(blocker)
     if require_model and not st.session_state.get('api_model', '').strip():
         raise ValueError('请先获取模型列表并选择，或手动填写模型名称后按Enter。')
     if not st.session_state.get('api_secret', '').strip():
@@ -113,23 +117,28 @@ def save_session_key():
 
 
 def apply_connection_preset():
-    preset = st.session_state["api_preset"]
-    if preset == "Kimi Code 订阅":
-        st.session_state.update(api_base="https://api.kimi.com/coding/v1", api_model="kimi-for-coding", api_protocol="openai")
-    elif preset == "OpenAI":
-        st.session_state.update(api_base="https://api.openai.com/v1", api_model="", api_protocol="openai")
+    providers.apply_preset(st.session_state, st.session_state['api_preset'])
     invalidate_catalog()
 
 
 with st.sidebar:
     st.markdown('<div class="c2v-brand"><div class="c2v-brand-name">Claim2Value</div><div class="c2v-brand-sub">研究工作台</div></div>', unsafe_allow_html=True)
-    desk_page = st.radio('页面', ['开始', '工作区', '教程与示例', '成果记录'], key='desk_page', width='stretch')
+    desk_page = st.radio('页面', ['开始', '工作区', '教程与示例', '成果记录', '模型与套餐'], key='desk_page', width='stretch')
     workflow = st.radio("研究方向", ["财务／估值研究", "量化处理与回测"], key='desk_direction', width='stretch',
                         on_change=lambda: st.session_state.update(desk_page='工作区', desk_example=None))
     connection = st.session_state.get('connection_result')
-    st.caption('模型：连接已测试' if connection and connection.get('ok') else '模型：尚未测试；本地计算仍可用')
+    probe_received = bool(connection and connection.get('ok') and connection.get('details', {}).get('text_response_received'))
+    st.caption('模型：连接已测试' if probe_received else '模型：接口已响应，但无正文' if connection and connection.get('ok') else '模型：尚未测试；本地计算仍可用')
     with st.expander("模型连接", expanded=False):
-        st.selectbox("配置预设", ["自定义", "Kimi Code 订阅", "OpenAI"], key="api_preset", on_change=apply_connection_preset)
+        st.caption('选服务 → 填密钥 → 获取模型 → 测试连接。没有 API 可以先使用教程里的本地样例。')
+        st.selectbox("配置预设", list(providers.PRESETS), key="api_preset", on_change=apply_connection_preset,
+                     help='服务和密钥需来自同一平台。切换服务会清除旧密钥，防止发给另一家服务。')
+        provider = providers.PRESETS[st.session_state['api_preset']]
+        st.caption(provider.note)
+        if provider.docs:
+            st.markdown('[官方配置与密钥说明](' + provider.docs + ')')
+        if providers.connection_blocker(st.session_state['api_preset']):
+            st.info('此项为套餐说明。请在“模型与套餐”查看可用接入方式；当前没有配置研究调用。')
         st.selectbox("接口协议", ["openai", "anthropic"], key="api_protocol", on_change=invalidate_catalog,
                      format_func=lambda value: "OpenAI · Chat Completions" if value == "openai" else "Anthropic · Messages")
         st.text_input("API Base URL", value=os.environ.get("C2V_API_BASE", "https://api.openai.com/v1"), key="api_base", on_change=invalidate_catalog,
@@ -152,8 +161,9 @@ with st.sidebar:
             preview = '生成：' + endpoints['completion'] + '\n模型列表：' + endpoints['models']
             st.code(redact(preview, st.session_state['api_secret']) if st.session_state['api_secret'] else preview, language=None)
         except ValueError as exc:
-            st.warning(str(exc))
-        if st.button('获取模型列表'):
+            if not providers.connection_blocker(st.session_state['api_preset']):
+                st.warning(str(exc))
+        if st.button('获取模型列表', disabled=bool(providers.connection_blocker(st.session_state['api_preset']))):
             invalidate_catalog()
             try:
                 with st.spinner('正在获取模型列表…'):
@@ -185,8 +195,8 @@ with st.sidebar:
             st.selectbox('JSON输出方式', ['auto', 'prompt'], key='api_json_mode',
                          format_func=lambda mode: '自动JSON约束（不支持时降级）' if mode == 'auto' else '仅提示词约束')
             st.caption('网络中断、临时服务错误和无法解析的正文有限重试；认证、硬额度和预算耗尽停止。超时重试可能重复耗用服务商额度，重试也计入本轮请求上限；设0可关闭。连接测试仍只发一次小请求，最多30秒。')
-        st.caption("密钥仅在本次会话中使用，不写入文件。测试只发一条小请求，不包含上传材料，会使用少量额度。")
-        if st.button("测试连接", type="primary"):
+        st.caption("密钥仅在本次会话中使用，不写入文件。测试不包含上传材料，通常请求256个输出token上限，OpenAI／MiniMax为思考预留2048个；按服务商实际计费。")
+        if st.button("测试连接", type="primary", disabled=bool(providers.connection_blocker(st.session_state['api_preset']))):
             invalidate_connection()
             try:
                 with st.spinner("正在测试接口…"):
@@ -220,6 +230,9 @@ if desk_page == '教程与示例':
     st.stop()
 if desk_page == '成果记录':
     experience.history(ROOT)
+    st.stop()
+if desk_page == '模型与套餐':
+    providers.render_guide()
     st.stop()
 
 page_heading(st, '研究工作区', '写清问题，准备材料，再核对结果。高级计算按需开启。')
@@ -570,6 +583,22 @@ else:
             default = proposal.get("mapping", {}).get(field, field if field in frame else "")
             mapping[field] = st.selectbox(labels[field], options, index=options.index(default) if default in options else 0,
                                          key="map_" + field + "_" + config_key + strategy)
+    audit_binding = digest(json.dumps([binding, chosen, str(sheet), mapping, strategy], sort_keys=True).encode())
+    st.caption('先检查重复、缺失、代码格式和因子发布时间。体检在本机执行，不需要 AI，也不修改数据。')
+    if st.button('检查数据（不调用模型）'):
+        try:
+            audit = assistance.quant_audit(frame, mapping, strategy)
+            audit['input_settings'] = {'binding': audit_binding, 'mapping': mapping, 'strategy': strategy, 'file': chosen, 'sheet': str(sheet)}
+            audit_run = Run(ROOT / 'work' / 'harness_runs', 'quant_data_check', uploads)
+            write_sources(audit_run, uploads)
+            assistance.save_audit(audit_run, audit)
+            st.session_state['quant_audit'] = (audit_binding, audit)
+        except (ValueError, TypeError) as exc:
+            st.error(str(exc))
+    saved_audit = st.session_state.get('quant_audit')
+    if saved_audit and saved_audit[0] == audit_binding:
+        assistance.render_quant_audit(saved_audit[1])
+        st.download_button('下载数据体检表', assistance.workbook(assistance.audit_tables(saved_audit[1])), file_name='回测数据体检.xlsx')
     a, b, c, d = st.columns(4)
     lookback = a.number_input("动量窗口（交易日）", min_value=1, max_value=252, value=int(proposal.get("lookback", 20)), key="lb_" + config_key)
     top_n = b.number_input("持仓数", min_value=1, max_value=1000, value=int(proposal.get("top_n", 2 if sample == 'quant' else min(10, len(frame[mapping['stock']].unique())) if mapping.get("stock") else 10)), key="tn_" + config_key)
@@ -596,6 +625,8 @@ else:
             st.session_state["run"] = run
             write_sources(run, uploads)
             run.write("task_settings.json", settings)
+            if saved_audit and saved_audit[0] == audit_binding:
+                assistance.save_audit(run, saved_audit[1])
             if proposal:
                 run.write("task_proposal.json", proposal)
             run.event("quant_validating", adjustment="operator_attestation")
