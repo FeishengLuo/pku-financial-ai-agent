@@ -48,6 +48,7 @@ FIELD_LABELS = dict(zip(
     ['股票代码','公司','报告期','实际披露日','报表范围','期间口径','原指标名称','标准指标','原始数值','金额单位','币种','更正版本','来源类别','原件文件','原文位置','文件指纹']))
 
 STATUS = {'created':'已建立记录','documents_parsed':'材料已读取','extracting':'正在整理候选',
+    'documents_blocked':'有文件未能读取，等待修正',
     'extraction_partial':'部分完成，可继续','extraction_interrupted':'提取中断，已有结果保留',
     'awaiting_review':'候选待核对','financial_completed':'财务结果已生成','financial_blocked':'财务字段待修正',
     'valuation_completed':'假设估值已生成','quant_completed':'回测已完成','quant_failed':'回测未完成',

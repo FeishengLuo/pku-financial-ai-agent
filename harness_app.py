@@ -15,13 +15,19 @@ import streamlit as st
 
 # Streamlit can rerun this entrypoint while retaining imported modules. Refresh only
 # changed local tool files, in dependency order; no process restart or credential reset.
-for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'presentation', 'reports', 'assistance', 'financial', 'diagnostics', 'research',
+dependencies_changed = False
+for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'presentation', 'reports', 'intake', 'feedback', 'assistance', 'financial', 'diagnostics', 'research',
                     'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'results', 'experience'):
     module = importlib.import_module('src.harness.' + module_name)
     source_hash = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
-    if getattr(module, '_c2v_loaded_source_hash', None) != source_hash:
+    api_module = importlib.import_module('src.harness.api')
+    stale_api_import = module is not api_module and any(
+        hasattr(module,name) and getattr(module,name) is not getattr(api_module,name)
+        for name in ('APIError','ModelClient','redact'))
+    if dependencies_changed or stale_api_import or getattr(module, '_c2v_loaded_source_hash', None) != source_hash:
         importlib.reload(module)
         module._c2v_loaded_source_hash = source_hash
+        dependencies_changed = True
 
 from src.financial_intake import FIELDS
 from src.harness.api import ModelClient, api_endpoints, redact
@@ -37,6 +43,8 @@ from src.review_ui import page_heading, section_heading
 from src.harness import experience
 from src.harness import providers, assistance, results
 from src.harness.presentation import literal
+from src.harness.intake import parse_files,read_table,table_sheets,render_file_issues
+from src.harness.feedback import show_error,describe_error,render_error
 
 ROOT = Path(__file__).resolve().parent
 st.set_page_config(page_title="Claim2Value · 研究工作台", layout="wide")
@@ -184,7 +192,9 @@ with st.sidebar:
                          key='api_model_choice', on_change=choose_model)
             st.caption('列表可能包含音频、嵌入等模型；请选择支持当前文本协议的模型，再测试连接。')
         if st.session_state.get('model_catalog_error'):
-            st.warning('获取模型列表失败，仍可手动填写模型名称。 ' + st.session_state['model_catalog_error'])
+            st.warning('获取模型列表未完成，仍可手动填写模型名称。')
+            with st.expander('列表的脱敏说明'):
+                st.text(st.session_state['model_catalog_error'])
         st.text_input("模型名称", value=os.environ.get("C2V_MODEL", ""), key="api_model", placeholder="先获取并选择，或手动填写模型 ID", on_change=manual_model_changed)
         st.caption('获取列表仅在点击时请求一次，不发送研究材料、不调用文本生成。改地址、协议或密钥后需重新获取。')
         with st.expander('研究请求与分批设置'):
@@ -204,7 +214,8 @@ with st.sidebar:
                     result = client().test_connection()
                 st.session_state["connection_result"] = {"ok": True, "details": result}
             except (ValueError, RuntimeError) as exc:
-                st.session_state["connection_result"] = {"ok": False, "message": str(exc)}
+                st.session_state["connection_result"] = {"ok": False, "message": redact(str(exc),st.session_state.get('api_secret','')),
+                    'failure':describe_error(exc,st.session_state.get('api_secret',''))}
         connection = st.session_state.get("connection_result")
         if connection:
             if connection["ok"]:
@@ -216,7 +227,7 @@ with st.sidebar:
                 with st.expander('连接详情'):
                     st.json(details)
             else:
-                st.error(connection["message"])
+                render_error(connection.get('failure') or describe_error(ValueError(connection['message']),st.session_state.get('api_secret','')))
         if st.session_state["api_preset"] == "Kimi Code 订阅":
             st.caption("使用 Kimi Code 控制台的密钥，不能与 Moonshot 开放平台密钥混用。")
             st.markdown("[Kimi Code 官方配置与使用范围](https://www.kimi.com/code/docs/)")
@@ -243,7 +254,7 @@ task_id = 'industry' if research_mode == '论点审查与兑现条件' else 'fin
 experience.task_help(task_id)
 step_slot = st.empty()
 uploaded = st.file_uploader("研究文件", type=["pdf", "docx", "txt", "md", "csv", "xlsx"], accept_multiple_files=True,
-                            help="单个 20 MB；合计 60 MB；每次最多 10 个文件。", key='research_uploads_' + str(st.session_state.get('desk_upload_generation',0)))
+                            max_upload_size=20,help="单个 20 MB；合计 60 MB；每次最多 10 个文件。", key='research_uploads_' + str(st.session_state.get('desk_upload_generation',0)))
 uploads = [(file.name, file.getvalue()) for file in uploaded]
 sample = st.session_state.get('desk_example')
 if not uploads and sample == task_id:
@@ -254,7 +265,7 @@ task = st.text_area("研究要求", placeholder="例如：扩产能否支持未�
                     "例如：用复权收盘价计算 20 日动量，每日选 10 只等权持有，单边费用 10 bps。", height=90, key='task_text')
 binding = digest(json.dumps({"files": [(n, digest(b)) for n, b in uploads], "workflow": workflow, "mode": research_mode, "task": task}, ensure_ascii=False).encode())
 if st.session_state.get("binding") != binding:
-    for key in ("run", "extraction_run", "candidates", "parsed", "result", "financial_result", "proposal", "draft", "extraction_done", 'partial_extraction_confirmed', 'partial_approval_binding', "dcf_result", "diagnostic_result", "diagnostic_binding", 'research_run', 'research_plan', 'research_review', 'research_context_binding', 'research_review_binding', 'research_confirmed_parameters', 'conditions_result', 'conditions_binding', 'strategy_diagnostic_result', 'strategy_diagnostic_binding'):
+    for key in ("run", "extraction_run", "candidates", "parsed", "file_issues", "result", "financial_result", "proposal", "draft", "extraction_done", 'partial_extraction_confirmed', 'partial_approval_binding', "dcf_result", "diagnostic_result", "diagnostic_binding", 'research_run', 'research_plan', 'research_review', 'research_context_binding', 'research_review_binding', 'research_confirmed_parameters', 'conditions_result', 'conditions_binding', 'strategy_diagnostic_result', 'strategy_diagnostic_binding'):
         st.session_state.pop(key, None)
     st.session_state["binding"] = binding
 
@@ -307,7 +318,7 @@ if workflow.startswith("财务"):
         try:
             render_research(ROOT, uploads, task, client)
         except Exception as exc:
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
         show_outputs()
         st.stop()
     mode = st.radio("输入方式", ["从文件提取候选", "导入已整理财务长表"], horizontal=True,
@@ -316,21 +327,31 @@ if workflow.startswith("财务"):
     if mode == "从文件提取候选":
         if st.button("读取文件", type="primary"):
             try:
-                run = current_run(uploads, "financial")
+                run = Run(ROOT / 'work' / 'harness_runs','financial',uploads)
+                write_sources(run,uploads)
+                st.session_state['run'] = run
                 with st.spinner("读取可提取的文字…"):
-                    parsed = [parse(data, name) for name, data in uploads]
+                    parsed,issues = parse_files(uploads)
                 st.session_state["parsed"] = parsed
-                run.write("source_index.json", [{k: v for k, v in doc.items() if k != "parts"} for doc in parsed])
-                run.event("documents_parsed", files=len(parsed))
+                st.session_state['file_issues'] = issues
+                if issues:
+                    for key in ('candidates','extraction_done','partial_extraction_confirmed','financial_result','diagnostic_result','dcf_result'):
+                        st.session_state.pop(key,None)
+                run.write('source_index.json',[{k:v for k,v in doc.items() if k!='parts'} for doc in parsed]+issues)
+                run.write('file_read_issues.json',issues)
+                run.event('documents_blocked' if issues else 'documents_parsed',files=len(parsed),failed_files=len(issues))
             except Exception as exc:
-                st.error(str(exc))
+                show_error(exc,st.session_state.get('api_secret',''))
         parsed = st.session_state.get("parsed")
+        issues = st.session_state.get('file_issues',[])
+        render_file_issues(issues)
         if parsed:
             st.dataframe(pd.DataFrame([{'文件':doc['name'],'已读取页／段':doc['parsed_units'],'总页／段':doc['total_units'],
                                        '文字量':doc['characters'],'范围':'存在提示，请核对' if doc['warnings'] else '解析完成'} for doc in parsed]), hide_index=True)
             for doc in parsed:
                 for warning in doc["warnings"]:
-                    st.warning(doc["name"] + "：" + warning)
+                    st.warning('材料读取存在范围提示。')
+                    literal(doc['name']+'：'+warning)
             with st.expander("查看文字和定位"):
                 for doc in parsed:
                     literal(doc['name'])
@@ -342,7 +363,7 @@ if workflow.startswith("财务"):
             if len(planned_batches) > st.session_state.get('api_budget', 40):
                 st.warning('全部批次至少需要的请求数超过本轮预算。已成功批次缓存；用完后再次继续，只请求未完成部分。重试或自动拆分也占预算。')
             st.caption("点击下一按钮会将解析范围内的文字分批发给模型。单批失败会记录并尝试后续批次；认证、额度或预算问题会停止。")
-            if st.button("提取／继续财务候选", disabled=not task.strip()):
+            if st.button("提取／继续财务候选", disabled=not task.strip() or bool(issues)):
                 try:
                     st.session_state.pop("financial_result", None)
                     st.session_state["extraction_done"] = False
@@ -361,7 +382,7 @@ if workflow.startswith("财务"):
                     else:
                         st.warning('部分批次没有成功。已完成候选可核对和下载；再次继续会跳过成功批次。')
                 except Exception as exc:
-                    st.error(str(exc))
+                    show_error(exc,st.session_state.get('api_secret',''))
                     if "run" in st.session_state:
                         path = st.session_state["run"].path / "outputs" / "candidates.json"
                         if path.exists():
@@ -387,7 +408,7 @@ if workflow.startswith("财务"):
             if st.button("读取财务长表", type="primary"):
                 try:
                     raw = next(data for name, data in uploads if name == chosen)
-                    frame = table(raw, chosen)
+                    frame = read_table(raw, chosen)
                     if list(frame.columns) != FIELDS:
                         raise ValueError("列名和顺序须与示例中的 16 列一致。")
                     rows = frame.to_dict("records")
@@ -399,7 +420,7 @@ if workflow.startswith("财务"):
                     current_run(uploads, "financial").write("imported_records.json", rows)
                     st.session_state.pop("financial_result", None)
                 except Exception as exc:
-                    st.error(str(exc))
+                    show_error(exc,st.session_state.get('api_secret',''))
         else:
             st.info("请同时上传财务长表 CSV 和被引用的原件。示例可在空白页面下载。")
     candidates = st.session_state.get("candidates")
@@ -444,7 +465,7 @@ if workflow.startswith("财务"):
                     normalized, quality = check_financial(run, editor.fillna("").astype(str).to_dict("records"), cutoff)
                     st.session_state["financial_result"] = (normalized, quality)
                 except Exception as exc:
-                    st.error(str(exc))
+                    show_error(exc,st.session_state.get('api_secret',''))
         if "financial_result" in st.session_state:
             normalized, quality = st.session_state["financial_result"]
             if quality["errors"]:
@@ -488,7 +509,7 @@ if workflow.startswith("财务"):
                             st.session_state["diagnostic_result"] = diagnosis
                         except Exception as exc:
                             st.session_state.pop("diagnostic_result", None)
-                            st.error(str(exc))
+                            show_error(exc,st.session_state.get('api_secret',''))
                     if "diagnostic_result" in st.session_state:
                         diagnosis = st.session_state["diagnostic_result"]
                         st.metric(diagnosis["bridge_target"] + "变化（元）", f"{float(diagnosis['target_change_cny']):,.2f}")
@@ -529,7 +550,7 @@ if workflow.startswith("财务"):
                 sensitivity = save_dcf(run, result)
                 st.session_state["dcf_result"] = (result, sensitivity)
             except Exception as exc:
-                st.error(str(exc))
+                show_error(exc,st.session_state.get('api_secret',''))
         if "dcf_result" in st.session_state:
             result, sensitivity = st.session_state["dcf_result"]
             st.metric("假设企业价值（元）", f"{result['enterprise_value']:,.2f}")
@@ -547,15 +568,14 @@ else:
     sheet = 0
     if chosen.lower().endswith(".xlsx"):
         try:
-            with pd.ExcelFile(io.BytesIO(raw)) as workbook:
-                sheet = st.selectbox("工作表", workbook.sheet_names)
-        except Exception:
-            st.error("无法读取 XLSX。")
+            sheet = st.selectbox('工作表',table_sheets(raw,chosen))
+        except Exception as exc:
+            show_error(exc,st.session_state.get('api_secret',''))
             st.stop()
     try:
-        frame = table(raw, chosen, sheet)
+        frame = read_table(raw, chosen, sheet)
     except Exception as exc:
-        st.error(str(exc))
+        show_error(exc,st.session_state.get('api_secret',''))
         st.stop()
     st.caption(f"{len(frame):,} 行 · {len(frame.columns)} 列；预览前 12 行。")
     st.dataframe(frame.head(12), hide_index=True)
@@ -569,7 +589,7 @@ else:
             st.session_state["proposal"] = proposal
             st.session_state["proposal_table"] = (chosen, str(sheet))
         except Exception as exc:
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
     proposal = st.session_state.get("proposal", {}) if st.session_state.get("proposal_table") == (chosen, str(sheet)) else {}
     if proposal:
         st.json(proposal)
@@ -598,7 +618,7 @@ else:
             assistance.save_audit(audit_run, audit)
             st.session_state['quant_audit'] = (audit_binding, audit)
         except (ValueError, TypeError) as exc:
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
     saved_audit = st.session_state.get('quant_audit')
     if saved_audit and saved_audit[0] == audit_binding:
         assistance.render_quant_audit(saved_audit[1])
@@ -643,7 +663,7 @@ else:
         except Exception as exc:
             if "run" in st.session_state:
                 st.session_state["run"].event("quant_failed", reason=type(exc).__name__)
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
     result = st.session_state.get("result")
     if result:
         section_heading(st, "02　研究结果", "仅对应上传样本")
@@ -691,7 +711,7 @@ else:
                             diagnostic_run.event('strategy_diagnostic_failed',reason='processing_error')
                         except OSError:
                             st.warning('未能保存失败状态，请检查本机目录是否可写。')
-                    st.error(str(exc))
+                    show_error(exc,st.session_state.get('api_secret',''))
             if 'strategy_diagnostic_result' in st.session_state:
                 report, navs = st.session_state['strategy_diagnostic_result']
                 interval=report['common_interval']
@@ -712,7 +732,7 @@ else:
             try:
                 st.session_state["draft"] = draft_commentary(st.session_state["run"], client(), result["metrics"])["draft"]
             except Exception as exc:
-                st.error(str(exc))
+                show_error(exc,st.session_state.get('api_secret',''))
         if "draft" in st.session_state:
             st.caption("模型解读草稿 · 尚未人工审阅")
             literal(st.session_state['draft'])

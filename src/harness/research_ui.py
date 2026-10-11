@@ -12,12 +12,14 @@ import pandas as pd
 import streamlit as st
 
 from .conditions import confirm_parameter, forward, reverse, sensitivity, save_conditions, market_cap_to_ev
-from .documents import parse, digest, MAX_CHARS, MAX_PAGES
+from .documents import digest, MAX_CHARS, MAX_PAGES
 from .research import document_scope, plan_thesis, review_thesis, validate_plan, local_plan
 from .store import Run
 from .assistance import evidence_actions, FACT_TYPES, REVIEW_STATUS
 from .exports import workbook
 from .presentation import literal,plain_label
+from .intake import parse_files,render_file_issues
+from .feedback import show_error
 
 
 def render(root, uploads, question, make_client):
@@ -27,9 +29,16 @@ def render(root, uploads, question, make_client):
     cutoff = st.date_input('研究信息截止日', value=date.today(), key='research_cutoff')
     file_binding = digest(json.dumps({'files': [(name, digest(data)) for name, data in uploads], 'parse_limits': [MAX_CHARS, MAX_PAGES]}).encode())
     if st.session_state.get('research_parsed_files_binding') != file_binding:
-        st.session_state['research_parsed_files'] = [parse(data, name) for name, data in uploads]
+        documents,issues = parse_files(uploads)
+        st.session_state['research_parsed_files'] = documents
+        st.session_state['research_file_issues'] = issues
         st.session_state['research_parsed_files_binding'] = file_binding
     documents = st.session_state['research_parsed_files']
+    issues=st.session_state.get('research_file_issues',[])
+    if issues:
+        render_file_issues(issues)
+        st.caption(f'已读取{len(documents)}份材料；失败文件修正前，不能进入模型审查。')
+        return
     st.subheader('文件来源登记')
     st.caption('按报告实际公开日填写。报告期末不是披露日；找不到日期请留空。核对日期与材料范围后，再勾选确认。')
     if st.session_state.get('desk_example') == 'industry':
@@ -66,8 +75,9 @@ def render(root, uploads, question, make_client):
     scope = document_scope(documents, metadata, cutoff)
     st.caption(f"可用于本次审查的材料：{len(scope['eligible'])}／{len(documents)} 份。研究计划确认和文件来源确认是两个步骤。")
     if scope['excluded']:
-        st.warning('以下文件尚未通过日期／来源登记，不能进入按截止日审查；这不表示文件损坏。请在上方“文件来源登记”中处理：\n\n' + '\n\n'.join(
-            f"- {item['name']}：{item['reason']}。" for item in scope['excluded']))
+        st.warning('以下文件尚未通过日期／来源登记，不能进入按截止日审查；这不表示文件损坏。请在上方“文件来源登记”中处理。')
+        for item in scope['excluded']:
+            literal(f"{item['name']}：{item['reason']}。")
     with st.expander('信息范围与文字覆盖'):
         st.json(scope)
         st.caption('元数据由操作人声明；日期确认不等于原件出处已认证。扫描版无文字的PDF需要另行提供可核对文本。')
@@ -95,7 +105,7 @@ def render(root, uploads, question, make_client):
         try:
             st.session_state['research_plan'] = plan_thesis(get_run(), make_client(), question, company, product, scope)
         except Exception as exc:
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
             st.info('模型拟定计划没有成功。仍可使用下方本地模板，编辑并确认后继续；模板不代表模型已经完成研究。')
     if st.button('使用本地研究模板（不调用模型）'):
         st.session_state['research_plan'] = local_plan(question, product)
@@ -137,7 +147,7 @@ def render(root, uploads, question, make_client):
             with st.spinner('逐个条件检索和审查，已完成条件会缓存…'):
                 st.session_state['research_review'] = review_thesis(get_run(), make_client(), plan, documents, scope, context)
         except Exception as exc:
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
             st.warning('本次尚未全部完成。下方已完成条件可核对和导出，下次点击将继续未完成条件。')
             partial_path = get_run().path / 'outputs' / 'thesis_partial.json'
             if partial_path.exists():
@@ -208,7 +218,7 @@ def render(root, uploads, question, make_client):
                     st.session_state.pop('conditions_result', None)
                     st.success('已保存确认候选；在下方选择适用字段和年度后才进入模型。')
                 except Exception as exc:
-                    st.error(str(exc))
+                    show_error(exc,st.session_state.get('api_secret',''))
 
     if reviewed:
         counts = [row.get('evidence', []) for row in reviewed['assessments']]
@@ -314,7 +324,7 @@ def render(root, uploads, question, make_client):
             st.session_state['run'] = run
             st.session_state['conditions_result'] = (result, reverse_result, sensitivities)
         except Exception as exc:
-            st.error(str(exc))
+            show_error(exc,st.session_state.get('api_secret',''))
     if 'conditions_result' in st.session_state:
         result, reversed_result, sensitivities = st.session_state['conditions_result']
         if result['enterprise_value'] is not None:

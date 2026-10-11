@@ -29,4 +29,5 @@ def test_repeated_diagnostic_failure_clears_stale_result_and_keeps_prior_snapsho
     assert app.session_state['run'].metadata['status']=='strategy_diagnostic_failed'
     assert app.session_state['run'].path != prior.path
     assert all(hashlib.sha256((prior.path/'outputs'/n).read_bytes()).hexdigest()==sha for n,sha in before.items())
-    assert any('本次诊断未完成' in e.value for e in app.error)
+    assert any('这一步需要修正' in e.value for e in app.error)
+    assert any('本次诊断未完成' in e.value for e in app.markdown)

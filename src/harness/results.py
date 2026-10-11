@@ -27,7 +27,7 @@ FILES = REPORTS | {'financial.xlsx':'财务数据与历史比率', 'financial_no
     'valuation_assumptions.json':'现金流估值假设', 'valuation_sensitivity.csv':'现金流估值敏感性',
     'earnings_diagnostics.xlsx':'盈利变化与原件定位', 'earnings_diagnostics.json':'盈利变化计算明细',
     'strategy_diagnostics.xlsx':'参数比较与年度分段', 'strategy_diagnostics.json':'参数比较明细',
-    'strategy_diagnostic_failures.json':'失败参数组明细'}
+    'strategy_diagnostic_failures.json':'失败参数组明细', 'file_read_issues.json':'文件读取问题清单'}
 READABLE = set(FILES) | {'research_input.json','thesis_review.json','thesis_partial.json','extraction_progress.json',
     'realization_conditions.json','example_notice.md','task_settings.json'}
 MAX_DOWNLOAD = 12 * 1024 * 1024
@@ -141,6 +141,17 @@ def overview(path, meta):
         if isinstance(value, bool) or not isinstance(value,(int,float)) or not math.isfinite(value):
             return '未记录'
         return f'{value:.2%}' if percent else f'{value:,.2f}'
+    try:
+        raw_issues = read_output(path,'file_read_issues.json',1024*1024)
+        if raw_issues is not None:
+            issues = json.loads(raw_issues.decode('utf-8'))
+            if not isinstance(issues,list) or any(not isinstance(i,dict) for i in issues):
+                raise ValueError('读取问题结构无效')
+            if issues:
+                fact('未能读取的文件',len(issues))
+                next_steps.append('下载文件读取问题清单，替换或移除失败文件后重新读取。此次材料读取未完成，没有发送模型请求。')
+    except (ValueError,OSError,UnicodeError,RecursionError):
+        notices.append('文件读取问题清单未能读取，请检查下载文件。')
     quality = read_json(path,'quality_report.json',notices)
     if quality is not None:
         fact('标准化记录', quality.get('normalized_rows','未记录'))

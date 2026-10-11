@@ -42,12 +42,12 @@ def test_plan_confirmation_does_not_hide_missing_sources_and_valid_source_enable
     item(app.text_input, '研究公司').set_value('公司甲').run()
     confirm_plan(app)
     assert item(app.button, '审查证据／继续').disabled
-    assert any('capacity.txt：披露日期未知或格式错误' in message.value for message in app.warning)
+    assert any('capacity.txt：披露日期未知或格式错误' in message.value for message in app.markdown)
     assert any('已核对日期和适用范围' in message.value for message in app.info)
     source(app, 'capacity.txt', '2099-01-01')
     confirm_plan(app)
     assert item(app.button, '审查证据／继续').disabled
-    assert any('晚于信息截止日' in message.value for message in app.warning)
+    assert any('晚于信息截止日' in message.value for message in app.markdown)
     item(app.text_input, '披露日期 · capacity.txt').set_value('2026-01-01').run()
     source(app, 'delay.txt', '2026-02-01')
     confirm_plan(app)

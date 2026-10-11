@@ -68,7 +68,8 @@ def decode_json_object(content: str) -> dict:
 
 
 def redact(text: str, secret: str) -> str:
-    text = text.replace(secret, "[已隐藏]").replace(urllib.parse.quote(secret, safe=""), "[已隐藏]")
+    if secret:
+        text = text.replace(secret, "[已隐藏]").replace(urllib.parse.quote(secret, safe=""), "[已隐藏]")
     text = re.sub(r"(?i)Bearer\s+\S+", "Bearer [已隐藏]", text)
     text = re.sub(r"\bsk-[A-Za-z0-9_-]+", "[已隐藏]", text)
     return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)[:900]
