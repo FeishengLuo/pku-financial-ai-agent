@@ -14,6 +14,7 @@ import pandas as pd
 from .documents import digest
 from .quant import backtest
 from .exports import workbook
+from .reports import strategy_report
 
 
 def performance(daily):
@@ -72,6 +73,7 @@ def diagnose(run, data, strategy, declared, registry: Path):
             failures.append({'index': index, 'settings': settings, 'reason': str(exc)})
     if not results:
         run.write('strategy_diagnostic_failures.json', failures)
+        run.event('strategy_diagnostic_failed',failed=len(failures))
         raise ValueError('全部声明参数组均无法回测；已保留失败与实验登记。')
     # Start AFTER the latest initial trade: compare daily carried-account returns, not differently warmed-up NAVs.
     first = max(r['daily'].index[0] for _, _, r in results)
@@ -80,6 +82,7 @@ def diagnose(run, data, strategy, declared, registry: Path):
         common_dates = common_dates.intersection(r['daily'].index)
     common_dates = common_dates[common_dates > first]
     if len(common_dates) < 3:
+        run.event('strategy_diagnostic_failed',reason='insufficient_common_interval')
         raise ValueError('不同窗口的共同持仓收益区间不足3日。声明已登记；请增加样本。')
     comparisons, segments, navs = [], [], pd.DataFrame(index=common_dates)
     for index, settings, result in results:
@@ -107,7 +110,6 @@ def diagnose(run, data, strategy, declared, registry: Path):
     run.write('experiment_history.json', previous + [entry])
     run.write('strategy_diagnostics.xlsx', workbook({'共同区间': pd.DataFrame(comparisons), '年度分段': pd.DataFrame(segments),
               '失败组': pd.DataFrame(failures), '共同区间净值': navs.rename_axis('date').reset_index()}))
-    run.write('strategy_diagnostics.md', '# 策略诊断\n\n' + json.dumps(report['common_interval'], ensure_ascii=False) + '\n\n' +
-              '\n'.join('- ' + s for s in report['limitations']))
+    run.write('strategy_diagnostics.md',strategy_report(report))
     run.event('strategy_diagnostics_completed', configurations=len(results), failed=len(failures))
     return report, navs

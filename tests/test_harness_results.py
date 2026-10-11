@@ -82,7 +82,7 @@ def test_history_filters_previews_and_downloads_snapshot_without_originals(tmp_p
     assert any('下一步' in md.value for md in app.markdown)
     summary = app.table[0].value.set_index('项目')['本次记录'].to_dict()
     assert summary['本次样本净收益'] == '-12.00%'
-    assert any('不能称为样本外收益' in text.value for text in app.text)
+    assert any('不能称为样本外收益' in md.value for md in app.markdown)
     app.text_input[0].set_value('不存在').run()
     assert not app.table and any('没有匹配记录' in i.value for i in app.info)
     app.text_input[0].set_value('待核行情').run()

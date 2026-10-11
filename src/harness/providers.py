@@ -80,8 +80,8 @@ def connection_blocker(name):
 def render_guide():
     import streamlit as st
     st.title('模型与套餐')
-    st.write('先确认你持有的是开放平台 API Key，还是网页／编程会员。选择服务后，地址与协议会自动填写；模型名称以账号实际列表为准。')
-    st.caption('可在选择框输入服务名称搜索。官方文档核对日期：' + REVIEWED_AT + '。预设不代表每家服务均已实际联通或研究质量相同。')
+    st.write('选择与你的密钥对应的服务。网页会员、编程套餐和开放平台API的调用权限各有范围。')
+    st.caption('输入名称可搜索。配置来源核对日期：' + REVIEWED_AT + '；调用前请测试自己的账户。')
     chosen = st.selectbox('查看服务说明', list(PRESETS), key='provider_guide_choice')
     item = PRESETS[chosen]
     st.subheader(chosen)
@@ -95,8 +95,9 @@ def render_guide():
     st.markdown('**第一次连接**')
     st.write('1. 在侧栏展开“模型连接”，选与你密钥对应的服务；切换服务会清除旧密钥。')
     st.write('2. 从官方控制台创建 API Key，填入后按 Enter。获取模型列表，选择支持文本的模型；不提供列表的服务可手填控制台模型 ID。')
-    st.write('3. 点击“测试连接”。它不发送研究材料，通常最多请求256个输出token；OpenAI和MiniMax为思考预留2048个上限。额度按服务商计费。之后回到工作区，先用两份小样例检查研究输出。')
+    st.write('3. 点击“测试连接”。成功后回到工作区，先用小样例检查输出。测试不发送研究材料，会产生一次短文本请求，按所选服务计费。')
     with st.expander('术语与常见问题'):
+        st.write('测试通常设置256个输出token上限，OpenAI和MiniMax为思考预留2048个；实际消耗与计费由服务商决定。')
         st.write('模型是实际处理文字的程序；服务商决定它在哪里运行、怎样收费。API Key 是调用凭证。地址是服务入口，预设会填写。协议是双方约定的请求格式，通常不用手动改。')
         st.write('401／403：核对密钥平台、区域、权限或套餐范围。404：核对地址和模型 ID。429／额度耗尽：查看账户剩余用量；不要靠反复测试解决。连接成功只证明小请求有响应。')
         st.write('AWS Bedrock、Vertex AI、Azure 等云托管模型的专用鉴权和部署未在此实现；已有 OpenAI／Anthropic 兼容网关可选择自定义。')

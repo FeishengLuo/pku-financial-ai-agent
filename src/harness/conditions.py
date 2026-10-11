@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .module_stamp import source_stamp
 _c2v_loaded_source_hash = source_stamp(__file__)
+from .reports import conditions_report
 
 from copy import deepcopy
 from datetime import date, timedelta
@@ -294,11 +295,5 @@ def save_conditions(run, result, reverse_result=None, sensitivities=None):
               '敏感性': pd.DataFrame(sensitivities or []), '绑定来源': pd.DataFrame(result['model'].get('bindings', [])),
               '缺口与冲突': pd.DataFrame([{'type': 'conflict', 'text': s} for s in result['conflicts']] +
                                         [{'type': 'gap', 'text': s} for s in result['gaps']])}))
-    lines = ['# 盈利与估值兑现条件', '', '结果是显式假设情景；冲突时不提供有效估值。', '',
-             '状态：' + result['status'], '企业价值（元）：' + str(result['enterprise_value']), '', '约束冲突：']
-    lines += ['- ' + s for s in result['conflicts']] + ['', '待补证据：'] + ['- ' + s for s in result['gaps']]
-    lines += ['', '口径与局限：'] + ['- ' + s for s in result['limitations']]
-    if reverse_result:
-        lines += ['', '反推：' + json.dumps(reverse_result, ensure_ascii=False)]
-    run.write('realization_conditions.md', '\n'.join(lines))
+    run.write('realization_conditions.md',conditions_report(result,reverse_result))
     run.event('realization_conditions_computed', status=result['status'])

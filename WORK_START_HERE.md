@@ -1,5 +1,7 @@
 # 当前从这里开始
 
+当前工作台检查见[界面、文案与报告Review](docs/harness/desk_review_20261011/review.md)。测试继续使用 `industry-research-harness-20261010`，启动入口和本地端口不变；报告正文、新增诊断历史记录及失败重跑已复核。新运行采用新版报告，旧底稿不改写。以下按各自日期保留历史状态。
+
 2026-10-11模型与成果更新：预设覆盖更多国内外API和套餐说明，新增“模型与套餐”新手入口、研究待核对事项Excel和本地量化数据体检。[连接指南](docs/harness/model_connections_20261011.md)、[用途与边界](docs/harness/product_value_20261011.md)、[本轮检查](docs/harness/provider_product_20261011/review.md)。继续拉取 `industry-research-harness-20261010`；预设不代表逐家真实联通或模型质量验证。
 
 2026-10-11界面调整：研究任务按行排列，材料和输出并列展示；工作台采用独立样式，手机侧栏和键盘入口实测可用。[本次设计与检查](docs/harness/frontend_design_20261011/review.md)。测试继续使用 `industry-research-harness-20261010` 分支。

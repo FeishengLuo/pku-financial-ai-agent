@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .module_stamp import source_stamp
 _c2v_loaded_source_hash = source_stamp(__file__)
+from .reports import financial_report,dcf_report
 
 import csv
 import io
@@ -248,13 +249,7 @@ def check_financial(run: Run, records: list[dict], as_of: date) -> tuple[list[di
                     if isinstance(cell.value, str) and cell.value.startswith("="):
                         cell.data_type = "s"
     run.write("financial.xlsx", buffer.getvalue())
-    coverage_note = (f"\n\n模型提取完成{extraction_coverage['completed_batches']}／{extraction_coverage['total_batches']}批。"
-                     + ('仍有未完成批次，本结果仅覆盖已确认的部分候选，不是全文审查。' if not extraction_coverage['complete'] else '仅表示解析范围内的批次已处理，不认证字段和原件。')) if extraction_coverage else ''
-    run.write("financial_report.md", f"# 财务核验结果\n\n截止日：{as_of.isoformat()}。有效记录：{len(normalized)}。"
-              f"格式状态：{report['status']}；缺失提示：{len(report['warnings'])}。\n\n"
-              "本地指纹和格式检查不认证原件出处、摘录或模型字段映射。人工确认由操作人完成。"
-              "不同披露日期、修订版本和报表口径分别计算；没有自动差分、年化或推断预测。\n\n"
-              "详情见 financial.xlsx、quality_report.json 与 source_index.json。上传原件仅保存在本机 sources 目录。\n" + coverage_note)
+    run.write('financial_report.md',financial_report(as_of,normalized,report,ratios,extraction_coverage))
     run.event("financial_completed", ratios=len(ratios))
     return normalized, report
 
@@ -287,8 +282,6 @@ def save_dcf(run: Run, result: dict) -> pd.DataFrame:
                 continue
     frame = pd.DataFrame(rows)
     run.write("valuation_sensitivity.csv", frame.to_csv(index=False).encode("utf-8-sig"))
-    run.write("valuation.md", "# 假设估值\n\n本估值使用用户明确输入的五年企业自由现金流（FCFF），不是模型提取的历史事实。"
-              f"\n\n企业价值：{result['enterprise_value']:,.2f} 元。净债务未提供时不计算股权价值。"
-              "未计入非经营资产、少数股东权益等额外调整，不自动输出每股目标价。参数与敏感性见同目录文件。\n")
+    run.write('valuation.md',dcf_report(result))
     run.event("valuation_completed")
     return frame

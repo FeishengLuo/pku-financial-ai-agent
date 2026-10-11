@@ -15,7 +15,7 @@ import streamlit as st
 
 # Streamlit can rerun this entrypoint while retaining imported modules. Refresh only
 # changed local tool files, in dependency order; no process restart or credential reset.
-for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'assistance', 'financial', 'diagnostics', 'research',
+for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'presentation', 'reports', 'assistance', 'financial', 'diagnostics', 'research',
                     'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'results', 'experience'):
     module = importlib.import_module('src.harness.' + module_name)
     source_hash = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
@@ -36,6 +36,7 @@ from src.harness.store import Run
 from src.review_ui import page_heading, section_heading
 from src.harness import experience
 from src.harness import providers, assistance, results
+from src.harness.presentation import literal
 
 ROOT = Path(__file__).resolve().parent
 st.set_page_config(page_title="Claim2Value · 研究工作台", layout="wide")
@@ -332,7 +333,7 @@ if workflow.startswith("财务"):
                     st.warning(doc["name"] + "：" + warning)
             with st.expander("查看文字和定位"):
                 for doc in parsed:
-                    st.write(doc["name"])
+                    literal(doc['name'])
                     # A bounded UI preview; extraction itself uses all parsed pieces.
                     st.json(doc["parts"][:8])
                 st.caption("界面预览各文件前 8 个片段；模型按解析覆盖范围分批读取。")
@@ -674,6 +675,8 @@ else:
                     st.session_state.pop('run', None)
             declared = st.checkbox('我预先声明这些参数；本次是已查看样本的研究，不称未触碰留出集。', key='grid_confirm_' + grid_binding)
             if st.button('运行策略诊断', disabled=not declared):
+                st.session_state.pop('strategy_diagnostic_result',None)
+                diagnostic_run = None
                 try:
                     diagnostic_run = Run(ROOT / 'work' / 'harness_runs', 'strategy_diagnostics', uploads)
                     st.session_state['run'] = diagnostic_run
@@ -683,12 +686,24 @@ else:
                                             ROOT / 'work' / 'harness_runs' / 'experiment_registry.jsonl')
                     st.session_state['strategy_diagnostic_result'] = (report, navs)
                 except Exception as exc:
+                    if diagnostic_run is not None:
+                        try:
+                            diagnostic_run.event('strategy_diagnostic_failed',reason='processing_error')
+                        except OSError:
+                            st.warning('未能保存失败状态，请检查本机目录是否可写。')
                     st.error(str(exc))
             if 'strategy_diagnostic_result' in st.session_state:
                 report, navs = st.session_state['strategy_diagnostic_result']
-                st.json(report['common_interval'])
-                st.dataframe(pd.DataFrame(report['comparisons']), hide_index=True)
-                st.dataframe(pd.DataFrame(report['year_segments']), hide_index=True)
+                interval=report['common_interval']
+                st.write(f"共同持仓收益区间：{interval['start']} 至 {interval['end']}，共{interval['days']}日。")
+                labels={'index':'参数组索引（从0起）','lookback':'动量窗口','top_n':'持仓数','fee_bps':'单边费率（bps）','direction':'排序方向',
+                    'days':'评估日数','start':'起始日','end':'结束日','year':'年度','net_return':'净收益（比例）',
+                    'gross_return':'毛收益（比例）','benchmark_net_return':'基准净收益（比例）','gross_net_gap':'毛净收益差（比例）',
+                    'excess_compounded_return':'相对基准收益差（比例）','max_drawdown':'最大回撤（比例）','sharpe_252_zero_rf':'年化Sharpe',
+                    'turnover_two_sided':'双向换手合计','sum_cost_fractions':'各期费率乘换手的合计',
+                    'full_lifecycle_return_with_entry_fee':'含首次建仓费的全区间净收益（比例）'}
+                st.dataframe(pd.DataFrame(report['comparisons']).rename(columns=labels), hide_index=True)
+                st.dataframe(pd.DataFrame(report['year_segments']).rename(columns=labels), hide_index=True)
                 st.line_chart(navs)
                 st.json({'timing': report['timing'], 'failed_parameters': report['failures'], 'history': report['declaration']})
                 for note in report['limitations']:
@@ -700,5 +715,5 @@ else:
                 st.error(str(exc))
         if "draft" in st.session_state:
             st.caption("模型解读草稿 · 尚未人工审阅")
-            st.write(st.session_state["draft"])
+            literal(st.session_state['draft'])
 show_outputs()

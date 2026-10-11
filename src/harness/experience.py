@@ -52,7 +52,9 @@ STATUS = {'created':'已建立记录','documents_parsed':'材料已读取','extr
     'awaiting_review':'候选待核对','financial_completed':'财务结果已生成','financial_blocked':'财务字段待修正',
     'valuation_completed':'假设估值已生成','quant_completed':'回测已完成','quant_failed':'回测未完成',
     'thesis_review_awaiting_human_confirmation':'观点检查已完成，待核对','thesis_review_interrupted':'观点检查部分完成',
-    'realization_conditions_computed':'情景计算已完成', 'quant_data_checked':'数据体检已完成'}
+    'realization_conditions_computed':'情景计算已完成', 'quant_data_checked':'数据体检已完成',
+    'earnings_diagnostics_completed':'盈利变化底稿已生成', 'strategy_diagnostics_completed':'参数比较已完成',
+    'strategy_diagnostic_declared':'参数已登记，尚未完成比较', 'strategy_diagnostic_failed':'参数比较未完成'}
 
 STYLE = '''<style>
 :root { --paper:#fff; --ink:#25272b; --muted:#62666b; --line:#dededb; --accent:#763b32; }
@@ -64,6 +66,7 @@ html, body, [data-testid="stAppViewContainer"] { font-family:'Microsoft YaHei','
 [data-testid="stMain"] [data-testid="stVerticalBlock"] { gap:.8rem; }
 [data-testid="stMarkdownContainer"] p { font-size:14px; line-height:1.8; }
 [data-testid="stMarkdownContainer"], input, textarea, [data-baseweb="select"] { font-family:'Microsoft YaHei','PingFang SC',sans-serif; }
+.stApp [data-testid="stMarkdownContainer"] p, .stApp input, .stApp textarea, .stApp button, .stApp [role="combobox"], .stApp table { font-family:'Microsoft YaHei','PingFang SC',sans-serif; }
 .stMain h1, .c2v-page-title h1 { font:600 28px/1.5 'SimSun','Songti SC',serif; letter-spacing:.5px; color:var(--ink); padding:0 0 10px; }
 .stMain h2 { font-size:20px; font-weight:600; }
 .stMain h3 { font-size:17px; font-weight:600; }
@@ -90,12 +93,12 @@ html, body, [data-testid="stAppViewContainer"] { font-family:'Microsoft YaHei','
 [data-testid="stWidgetLabel"] p { font-size:13px; color:var(--ink); }
 [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p, .desk-meta { color:var(--muted); font-size:12px; }
 [data-testid="stCaptionContainer"] { opacity:1; }
-[data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="textarea"] { background:#fafaf8; border-color:#c9cbc7; border-radius:3px; }
-[data-baseweb="input"] > div, [data-baseweb="textarea"] > div { background:#fafaf8; }
-[data-baseweb="input"]:focus-within, [data-baseweb="textarea"]:focus-within { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-[role="tab"][aria-selected="true"] { color:var(--ink); }
-[data-baseweb="tab-highlight"] { background-color:var(--ink); }
-[data-baseweb="textarea"] textarea { font-size:14px; line-height:1.7; }
+[data-testid="stTextInputRootElement"], [data-testid="stTextAreaRootElement"], .stApp [role="combobox"] { background:#fafaf8; border-color:#c9cbc7; border-radius:3px; }
+[data-testid="stTextInputRootElement"]:focus-within, [data-testid="stTextAreaRootElement"]:focus-within { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+.stApp [data-testid="stTab"][aria-selected="true"] [data-testid="stMarkdownContainer"] { color:var(--ink); }
+.stApp [data-testid="stTab"] .react-aria-SelectionIndicator { background:var(--ink); }
+.stApp [data-testid="stTab"]:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.stApp textarea { font-size:14px; line-height:1.7; }
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primaryFormSubmit"] { background:var(--ink); color:#fff; border-color:var(--ink); border-radius:3px; }
 [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseButton-primaryFormSubmit"]:hover { background:#45474a; color:#fff; border-color:#45474a; }
 [data-testid="stBaseButton-secondary"], [data-testid="stBaseButton-secondaryFormSubmit"] { background:transparent; border-color:#bfc1be; border-radius:3px; color:var(--ink); }
@@ -124,6 +127,19 @@ html, body, [data-testid="stAppViewContainer"] { font-family:'Microsoft YaHei','
 .st-key-tutorial_steps, .st-key-tutorial_calculation { padding:12px 0 20px; border-top:1px solid var(--line); }
 .desk-intro-title { font-size:15px; font-weight:600; margin-bottom:6px; }
 .desk-intro-copy { font-size:13px; color:var(--muted); line-height:1.8; }
+.desk-paragraph { font-size:14px; line-height:1.8; overflow-wrap:anywhere; }
+.desk-report { max-width:900px; font-size:14px; line-height:1.8; overflow-wrap:anywhere; }
+.desk-report h2 { font:600 23px/1.5 'SimSun','Songti SC',serif; margin:0 0 18px; }
+.desk-report h3 { font-size:16px; margin:24px 0 10px; padding-bottom:7px; border-bottom:1px solid var(--line); }
+.desk-report h4 { font-size:14px; margin:18px 0 8px; }
+.desk-report p { margin:12px 0; }
+.desk-report blockquote { margin:12px 0; border-left:3px solid var(--line); padding-left:16px; color:var(--ink); }
+.desk-report-table { max-width:100%; overflow-x:auto; margin:14px 0; }
+.desk-report table { width:100%; border-collapse:collapse; font-size:13px; }
+.desk-report-table:has(th:nth-child(4)) table { min-width:720px; }
+.desk-report-table:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.desk-report th, .desk-report td { border-bottom:1px solid var(--line); padding:9px 10px; text-align:left; vertical-align:top; }
+.desk-report th { color:var(--ink); font-weight:600; background:#f6f6f3; }
 @media(max-width:800px) {
  [data-testid="stMainBlockContainer"] { padding:2rem 1.2rem 3rem; }
  .stMain h1, .c2v-page-title h1 { font-size:26px; }
@@ -184,7 +200,7 @@ def home():
     with st.container(key='first_use'):
         text, action = st.columns([3, 1.4], vertical_alignment='center')
         with text:
-            st.markdown('<div class="desk-intro-title">第一次使用</div><div class="desk-intro-copy">用合成材料走一遍流程。教程包含样例文件、可复制的提问和无需 API 的计算。</div>', unsafe_allow_html=True)
+            st.markdown('<div class="desk-intro-title">第一次使用</div><div class="desk-intro-copy">先用样例熟悉操作。本地核验与回测不需要模型密钥。</div>', unsafe_allow_html=True)
         with action:
             st.button('打开教程与样例', on_click=lambda: st.session_state.update(desk_page='教程与示例'))
     with st.expander('使用范围与数据去向'):
@@ -328,7 +344,8 @@ def saved_bundle(root, run_id):
 
 def history(root):
     st.title('成果记录')
-    st.write('找回这台电脑保存的研究输出。这里可以下载历史快照；继续模型任务仍需保留原来的浏览器会话。')
+    st.write('查看这台电脑保存的底稿，搜索后可预览或下载。')
+    st.caption('继续未完成的模型任务需要原浏览器会话；这里提供已保存的快照。')
     runs_root = root/'work/harness_runs'
     records = saved_runs(runs_root, limit=200)
     if not records:
@@ -347,7 +364,7 @@ def history(root):
         text = ' '.join([title,record['id'],module] + [str(i.get('name','')) for i in record['inputs']])
         if (kind == '全部' or kind == module) and query.strip().casefold() in text.casefold():
             options.append((record,path,title))
-    st.caption(f'最近200条本机记录中找到 {len(options)} 条；不会修改旧快照。')
+    st.caption(f'在最近200条记录中找到 {len(options)} 条。')
     if not options:
         st.info('没有匹配记录。清空搜索词或把任务类型改为“全部”。')
         return

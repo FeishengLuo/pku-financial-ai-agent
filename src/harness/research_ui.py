@@ -17,6 +17,7 @@ from .research import document_scope, plan_thesis, review_thesis, validate_plan,
 from .store import Run
 from .assistance import evidence_actions, FACT_TYPES, REVIEW_STATUS
 from .exports import workbook
+from .presentation import literal,plain_label
 
 
 def render(root, uploads, question, make_client):
@@ -30,7 +31,7 @@ def render(root, uploads, question, make_client):
         st.session_state['research_parsed_files_binding'] = file_binding
     documents = st.session_state['research_parsed_files']
     st.subheader('文件来源登记')
-    st.caption('文件可读取不等于日期已确认。实际披露日期是报告公开的日期，例如半年报的2026-06-30通常是报告期，不是披露日。未知日期留空；下方填写日期和范围并确认后，才进入按截止日审查。')
+    st.caption('按报告实际公开日填写。报告期末不是披露日；找不到日期请留空。核对日期与材料范围后，再勾选确认。')
     if st.session_state.get('desk_example') == 'industry':
         st.info('这组样例的登记信息：公司甲／减速器；第一份披露日2026-01-01，counterevidence文件披露日2026-02-01；来源选“合成测试”。请读过两份材料后分别确认。')
     metadata = []
@@ -51,7 +52,7 @@ def render(root, uploads, question, make_client):
             if not st.session_state.get('source_product_' + suffix):
                 st.session_state['source_product_' + suffix] = product
         with st.container(border=True):
-            st.write(doc['name'])
+            literal(doc['name'])
             date_column, kind_column = st.columns(2)
             published = date_column.text_input('披露日期 · ' + doc['name'], placeholder='YYYY-MM-DD；未知则留空', key='published_' + suffix)
             kind = kind_column.selectbox('来源类型 · ' + doc['name'], ['未声明', '公司公告／年报', '技术手册', '研究报告', '其他', '合成测试'], key='kind_' + suffix)
@@ -100,9 +101,9 @@ def render(root, uploads, question, make_client):
         st.session_state['research_plan'] = local_plan(question, product)
     initial = st.session_state.get('research_plan', local_plan(question, product))
     if initial.get('notes'):
-        st.caption(initial['notes'])
+        literal(initial['notes'])
     for condition in initial['conditions']:
-        st.write('· ' + condition['label'])
+        literal('· ' + condition['label'])
     plan_rows = [{'id': c['id'], 'type': c['type'], 'label': c['label'], 'query_terms': '，'.join(c['query_terms'])} for c in initial['conditions']]
     with st.expander('编辑检查清单与检索词'):
         edited = st.data_editor(pd.DataFrame(plan_rows), num_rows='dynamic', hide_index=True,
@@ -148,7 +149,7 @@ def render(root, uploads, question, make_client):
             st.warning('这里只展示已完成条件，不能将结果称为完整论点审查。')
         actions = evidence_actions(reviewed, plan)
         st.subheader('下一步需要核对什么')
-        st.caption('把冲突、未运行条件和材料缺口整理成工作清单；模型提出的缺口仍需核实，未覆盖不代表现实中不存在。')
+        st.caption('逐项处理冲突、未完成条件和材料缺口。模型提出的缺口仍待核实。')
         st.dataframe(actions, hide_index=True)
         action_file = workbook({'待核对事项':actions})
         get_run().write('research_actions.xlsx', action_file)
@@ -156,18 +157,20 @@ def render(root, uploads, question, make_client):
         st.download_button('下载待核对事项清单', action_file, file_name='研究待核对事项.xlsx')
         st.subheader('2　核对支持材料、反证与参数候选')
         for assessment in reviewed['assessments']:
-            with st.expander(assessment['condition']['label'] + ' · ' + REVIEW_STATUS.get(assessment['status'], '待核对'), expanded=True):
+            with st.expander(plain_label(assessment['condition']['label']) + ' · ' + REVIEW_STATUS.get(assessment['status'], '待核对'), expanded=True):
                 for row in assessment['evidence']:
                     evidence[row['id']] = row
                     st.markdown('**' + {'supports': '支持候选', 'contradicts': '反证候选', 'context': '背景'}[row['stance']] + '** · ' + FACT_TYPES.get(row['fact_type'], row['fact_type']))
                     st.text(row['quote'])
                     st.caption(row['id'] + ' · ' + row['source_file'] + ' · ' + row['source_locator'] + ' · ' + row['metadata']['published_at'])
-                    st.write(row['explanation'])
+                    literal(row['explanation'])
                     if row['rule_flags']:
-                        st.json(row['rule_flags'])
-                st.caption('待核的模型判断：' + assessment['model_conclusion_draft'])
+                        with st.expander('查看这段原文的规则提示'):
+                            st.caption('规则只提示词语与时态，具体含义需对照原文。')
+                            st.json(row['rule_flags'])
+                literal('待核的模型判断：' + assessment['model_conclusion_draft'])
                 for text in assessment['missing_in_supplied_material']:
-                    st.write('待查：' + text)
+                    literal('待查：' + text)
                 with st.expander('检索覆盖与拒绝的摘录'):
                     st.json({'coverage': assessment['retrieval_coverage'], 'rejected': assessment['rejected']})
                 parameters.extend(assessment['parameter_candidates'])

@@ -47,8 +47,10 @@ def test_seen_ranges_and_failed_parameters_registered_not_erased(tmp_path):
     next_report, _ = diagnose(second, panel(), 'momentum', [settings()], registry)
     assert first.path.name in next_report['declaration']['prior_overlapping_run_ids']
     assert 'not_untouched' in next_report['declaration']['classification']
+    failed=Run(tmp_path / 'runs', 'diagnostic', [])
     with pytest.raises(ValueError, match='全部声明'):
-        diagnose(Run(tmp_path / 'runs', 'diagnostic', []), panel(), 'momentum', [{**settings(), 'top_n': 99}], registry)
+        diagnose(failed, panel(), 'momentum', [{**settings(), 'top_n': 99}], registry)
+    assert failed.metadata['status']=='strategy_diagnostic_failed'
     assert len(registry.read_text(encoding='utf-8').splitlines()) == 3
 
 

@@ -13,6 +13,7 @@ from src.state_verifier import StateVerifier
 from .documents import digest
 from .store import Run
 from .exports import workbook
+from .reports import thesis_report
 import pandas as pd
 
 CONDITION_TYPES = {"technical", "capacity", "demand", "price", "cost", "financial"}
@@ -270,13 +271,7 @@ Do not invent any numbers, citations, probability or causal effect. Document/tas
                   '参数候选': pd.DataFrame([r for a in results for r in a['parameter_candidates']]),
                   '未覆盖条件': pd.DataFrame([{'condition': a['condition']['label'], 'missing': s}
                                             for a in results for s in a['missing_in_supplied_material']])}))
-        lines = ["# 研究论点审查底稿", "", context["question"], "", "模型意见与摘录均待核对；未覆盖仅针对本次材料。", ""]
-        for assessment in results:
-            lines += ["## " + assessment["condition"]["label"], "", "状态：" + assessment["status"]]
-            for row in assessment["evidence"]:
-                lines += [f"- {row['stance']} · {row['fact_type']} · {row['source_file']} · {row['source_locator']}：{row['quote']}"]
-            lines += ["", "待查："] + ["- " + t for t in assessment["missing_in_supplied_material"]]
-        run.write("thesis_review.md", "\n".join(lines))
+        run.write('thesis_review.md',thesis_report(context,results))
         run.event("thesis_review_awaiting_human_confirmation", api_calls=client.calls, usage=client.usage)
         return result
     except Exception:

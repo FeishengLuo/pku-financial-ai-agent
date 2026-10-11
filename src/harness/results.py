@@ -10,19 +10,24 @@ import math
 import hashlib
 from pathlib import Path
 import re
+from .presentation import render_report
 
 WORKFLOWS = {'industry_research':'观点检查', 'financial':'财务整理', 'quant':'策略回测',
     'realization_conditions':'情景估值', 'tutorial_quant':'合成回测样例', 'tutorial_conditions':'合成估值样例',
-    'valuation':'现金流估值', 'strategy_diagnostics':'策略诊断', 'quant_data_check':'回测数据体检'}
+    'valuation':'现金流估值', 'strategy_diagnostics':'策略诊断', 'quant_data_check':'回测数据体检', 'earnings_diagnostics':'盈利变化解释'}
 REPORTS = {'financial_report.md':'财务核验报告', 'quant_report.md':'回测说明', 'thesis_review.md':'观点检查底稿',
-    'realization_conditions.md':'情景估值说明', 'valuation.md':'现金流估值说明'}
+    'realization_conditions.md':'情景估值说明', 'valuation.md':'现金流估值说明',
+    'earnings_diagnostics.md':'盈利变化底稿', 'strategy_diagnostics.md':'参数比较报告'}
 FILES = REPORTS | {'financial.xlsx':'财务数据与历史比率', 'financial_normalized.csv':'标准化财务长表',
     'historical_ratios.csv':'历史比率', 'quality_report.json':'财务校验明细', 'thesis_review.xlsx':'证据与参数候选',
     'research_actions.xlsx':'待核对事项', 'research_actions.json':'待核对事项明细',
     'realization_conditions.xlsx':'预测年度与约束', 'data_readiness.xlsx':'数据体检问题表',
     'data_readiness.json':'数据体检明细', 'daily.csv':'每日净值与费用', 'positions.csv':'持仓明细',
     'rank_ic.csv':'因子相关性明细', 'metrics.json':'回测指标', 'cleaned_data.csv':'回测输入快照',
-    'valuation_assumptions.json':'现金流估值假设', 'valuation_sensitivity.csv':'现金流估值敏感性'}
+    'valuation_assumptions.json':'现金流估值假设', 'valuation_sensitivity.csv':'现金流估值敏感性',
+    'earnings_diagnostics.xlsx':'盈利变化与原件定位', 'earnings_diagnostics.json':'盈利变化计算明细',
+    'strategy_diagnostics.xlsx':'参数比较与年度分段', 'strategy_diagnostics.json':'参数比较明细',
+    'strategy_diagnostic_failures.json':'失败参数组明细'}
 READABLE = set(FILES) | {'research_input.json','thesis_review.json','thesis_partial.json','extraction_progress.json',
     'realization_conditions.json','example_notice.md','task_settings.json'}
 MAX_DOWNLOAD = 12 * 1024 * 1024
@@ -69,6 +74,7 @@ def read_json(path, name, notices):
             'quality_report.json': ('errors','warnings'),
             'thesis_review.json': ('assessments',), 'thesis_partial.json': ('assessments',),
             'data_readiness.json': ('issues',),
+            'earnings_diagnostics.json': ('bridge',), 'strategy_diagnostics.json': ('comparisons','failures'),
         }
         if any(not isinstance(value.get(k),list) for k in shapes.get(name,())):
             raise ValueError('结果结构不完整')
@@ -183,9 +189,18 @@ def overview(path, meta):
         fact('假设现金流企业价值（元）',number(valuation.get('enterprise_value')))
         fact('假设股权价值（元）',number(valuation.get('equity_value')))
         next_steps.append('对照现金流假设和敏感性表复核折现率、增长率及净债务；没有净债务时不计算股权价值。')
+    earnings=read_json(path,'earnings_diagnostics.json',notices)
+    if earnings is not None:
+        fact('年度比较',str(earnings.get('earlier','未记录'))+' 至 '+str(earnings.get('later','未记录')))
+        fact('会计变化金额（元）',earnings.get('target_change_cny','未记录'))
+        next_steps.append('查看收入、毛利率和其余项目的贡献，核对两期原件与比较口径。会计分解不是技术进步的因果贡献。')
+    strategy=read_json(path,'strategy_diagnostics.json',notices)
+    if strategy is not None:
+        fact('成功／失败参数组',f"{len(strategy['comparisons'])}／{len(strategy['failures'])}")
+        next_steps.append('在共同持仓区间比较全部声明参数组，保留失败组及已查看样本登记；不把最佳组当作新留出结果。')
     if not facts:
         next_steps.append('这条记录没有可读取的结构化结果。查看状态与已保存文件；修正问题后从工作区重新运行。')
-    if meta.get('status') in {'quant_failed','financial_blocked','thesis_review_interrupted','extraction_interrupted','extraction_partial'}:
+    if meta.get('status') in {'quant_failed','financial_blocked','thesis_review_interrupted','extraction_interrupted','extraction_partial','strategy_diagnostic_failed'}:
         next_steps.insert(0,'本次处理存在中断或待修正项目。历史页只能查看快照；继续模型处理需要原会话，或重新上传原件。')
     return {'synthetic':synthetic, 'facts':facts, 'next_steps':list(dict.fromkeys(next_steps)), 'notices':notices,
             'financial_problems':financial_problems(quality['errors']) if quality is not None else []}
@@ -246,9 +261,9 @@ def render_snapshot(path, meta, key):
                 if raw is None:
                     continue
                 found = True
-                st.markdown('**'+label+'**')
-                # Model/source text stays literal: no remote images or executable HTML.
-                st.text(raw.decode('utf-8')[:20000])
+                if not raw.decode('utf-8').lstrip().startswith('#'):
+                    st.markdown('**'+label+'**')
+                render_report(raw.decode('utf-8'))
                 st.caption('预览最多20,000字符；下载文件保留全文。')
             except (ValueError,OSError,UnicodeError):
                 st.warning(label+' 未能预览，请核对成果文件。')
