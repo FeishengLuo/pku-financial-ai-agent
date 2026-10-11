@@ -23,7 +23,7 @@ def file_error(exc,name):
     # Only our own controlled parser messages are exposed; third-party messages
     # can contain file contents. Keep their exception type instead of their body.
     allowed=('文件为空','单个文件上限','PDF 已加密','没有可读取的文字','仅支持 UTF-8','CSV 存在重复列名',
-             '表格为空','表格请使用','支持 PDF','压缩文档展开超过','解析范围超出')
+             '表格为空','表格请使用','支持 PDF','压缩文档展开超过','解析范围超出','PDF页码')
     suffix=Path(name).suffix.lower()
     reason=message if type(exc) is ValueError and message.startswith(allowed) else {
         '.pdf':'PDF未能读取，文件可能损坏或不是有效PDF。',
@@ -44,11 +44,11 @@ def file_error(exc,name):
     return FileReadError(name,reason,action,type(exc).__name__)
 
 
-def parse_files(uploads):
+def parse_files(uploads, *, pdf_pages=None):
     documents,issues=[],[]
     for name,raw in uploads:
         try:
-            documents.append(parse(raw,name))
+            documents.append(parse(raw,name,pdf_pages=(pdf_pages or {}).get(name,'')))
         except Exception as exc:
             error=file_error(exc,name)
             issues.append({'name':name,'source_file':safe_name(name),'sha256':digest(raw),'bytes':len(raw),

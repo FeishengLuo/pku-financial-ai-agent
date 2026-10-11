@@ -2,6 +2,8 @@
 
 用户后续可把本文件交给负责前端的工具或同学。本轮没有向其他对话发消息，也没有换前端框架。
 
+真实操作补充：[案例验证](real_cases_20261011/review.md)。7项长条件展开后页面过长，财务16列表格横向阅读困难，模型等待可能超过十分钟；请按条件提供可定位的阅读导航、清楚的逐批进度和本次失败状态。保留部分成果与缓存复用，不能用“已完成”掩盖摘录拒绝、分类待核或网络失败。年报页码选择已实现，未选页必须继续明确排除。
+
 ## 当前入口与任务
 
 仓库 https://github.com/aeiou0123/pku-financial-ai-agent ，测试分支 `industry-research-harness-20261010`。Windows运行根目录 `start_harness.bat`，默认 http://127.0.0.1:8510 。主入口 `harness_app.py`；表现与布局在 `src/harness/presentation.py`、`experience.py`，公告目录在 `catalog_ui.py`。先查看实际源文件，不以本文代替读取当前实现。

@@ -92,12 +92,32 @@ def _check_zip(data: bytes) -> None:
             raise ValueError("压缩文档展开超过 100 MB。")
 
 
-def parse(data: bytes, name: str, *, max_chars: int = MAX_CHARS, max_pages: int = MAX_PAGES) -> dict:
+def page_selection(value: str) -> list[int] | None:
+    """One-based original PDF pages; blank means the usual full bounded parse."""
+    if not value.strip():
+        return None
+    pages = set()
+    for item in value.replace('，', ',').split(','):
+        if not re.fullmatch(r'\s*[1-9]\d*\s*(?:-\s*[1-9]\d*\s*)?', item):
+            raise ValueError('PDF页码格式错误；请使用1,6-7,108-116这样的原件页码。')
+        bounds = [int(part.strip()) for part in item.split('-')]
+        start, end = bounds[0], bounds[-1]
+        if end < start or end > MAX_PAGES:
+            raise ValueError('PDF页码范围错误；页码必须递增且不超过1000。')
+        pages.update(range(start, end + 1))
+    return sorted(pages)
+
+
+def parse(data: bytes, name: str, *, max_chars: int = MAX_CHARS, max_pages: int = MAX_PAGES,
+          pdf_pages: str = '') -> dict:
     if not data or len(data) > MAX_BYTES:
         raise ValueError("文件为空或超过 20 MB。")
     if not 1 <= max_chars <= MAX_CHARS or not 1 <= max_pages <= MAX_PAGES:
         raise ValueError('解析范围超出本机允许的字符或页数上限。')
     suffix = Path(name).suffix.lower()
+    selection = page_selection(pdf_pages)
+    if selection and suffix != '.pdf':
+        raise ValueError('PDF页码选择仅适用于PDF文件。')
     parts, warnings = [], []
     total_units = 0
     if suffix == ".pdf":
@@ -106,7 +126,13 @@ def parse(data: bytes, name: str, *, max_chars: int = MAX_CHARS, max_pages: int 
         if reader.is_encrypted:
             raise ValueError("PDF 已加密，请上传可读取的版本。")
         total_units = len(reader.pages)
-        for i, page in enumerate(reader.pages[:max_pages], 1):
+        if selection and (selection[-1] > total_units or len(selection) > max_pages):
+            raise ValueError('PDF页码超出原件总页数或本次允许页数；请核对原件。')
+        selected = selection or list(range(1, min(total_units, max_pages) + 1))
+        if selection and len(selected) < total_units:
+            warnings.append(f'本次只读取指定的{len(selected)}个原件页；其余页不在审查范围内。')
+        for i in selected:
+            page = reader.pages[i - 1]
             text = page.extract_text() or ""
             if not text.strip():
                 warnings.append(f"第 {i} 页无可提取文字；本版不含 OCR。")
@@ -150,7 +176,7 @@ def parse(data: bytes, name: str, *, max_chars: int = MAX_CHARS, max_pages: int 
             break
         kept.append(part)
         chars += len(part["text"])
-    if suffix == ".pdf" and total_units > max_pages:
+    if suffix == ".pdf" and not selection and total_units > max_pages:
         warnings.append(f"本次只读取前 {max_pages} 页；其余页尚未解析。")
     if not any(p["text"].strip() for p in kept):
         raise ValueError("没有可读取的文字，本版不含 OCR。")
@@ -158,7 +184,8 @@ def parse(data: bytes, name: str, *, max_chars: int = MAX_CHARS, max_pages: int 
             "bytes": len(data), "parts": kept, "warnings": warnings,
             "total_units": total_units, "parsed_units": len(kept), "characters": chars,
             "coverage": "partial" if warnings else "parsed_text",
-            "parse_limits": {"max_chars": max_chars, "max_pages": max_pages}}
+            "parse_limits": {"max_chars": max_chars, "max_pages": max_pages,
+                             "pdf_pages": selection}}
 
 
 def chunks(documents: list[dict], limit: int = 6000) -> list[list[dict]]:

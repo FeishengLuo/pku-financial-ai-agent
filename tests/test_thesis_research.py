@@ -73,6 +73,14 @@ def test_support_and_counterevidence_stay_candidates_with_explicit_parameter_lin
     assert parameter["fact_type"] == "forecast" and "confirmation" in parameter["status"]
 
 
+def test_question_dates_are_not_treated_as_missing_source_facts():
+    pieces, _ = retrieve(corpus(), scope(), ['产能'])
+    first = anchor_assessment(response(pieces), pieces, CONDITION)
+    question = {**CONDITION, 'label': '截至2026-07-10，2027年是否可形成产量？'}
+    second = anchor_assessment(response(pieces), pieces, question)
+    assert [r['rule_flags'] for r in first['evidence']] == [r['rule_flags'] for r in second['evidence']]
+
+
 @pytest.mark.parametrize("edit", ["quote", "piece", "parameter_value", "parameter_index"])
 def test_fabricated_citation_or_parameter_is_rejected(edit):
     pieces, _ = retrieve(corpus(), scope(), ["产能"])
@@ -120,3 +128,14 @@ def test_plan_cached_and_schema_rejects_arbitrary_tools(tmp_path):
     assert api.calls == 1
     with pytest.raises(ValueError):
         validate_plan({"conditions": [CONDITION], "python": "run code"})
+
+
+def test_invalid_model_plan_preserves_candidate_and_request_receipt(tmp_path):
+    run = Run(tmp_path, 'research', [])
+    bad = {'conditions': [{**CONDITION, 'query_terms': ['word'] * 13}]}
+    api = client(lambda *args: bad)
+    with pytest.raises(ValueError, match='检索词'):
+        plan_thesis(run, api, '核查产能', '公司甲', '减速器', scope())
+    assert json.loads((run.path / 'outputs/thesis_plan_candidate.json').read_text(encoding='utf-8')) == bad
+    assert run.metadata['status'] == 'thesis_plan_failed'
+    assert not list((run.path / 'cache').glob('plan_*.json'))

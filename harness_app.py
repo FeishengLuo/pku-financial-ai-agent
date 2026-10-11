@@ -69,6 +69,8 @@ def client(*, require_model: bool = True) -> ModelClient:
             request_status.info('当前批次超过模型上下文或输出上限，已拆成更小片段继续。')
         elif event['stage'] == 'request_completed':
             request_status.caption(f"该次请求已完成，用时{event['elapsed_seconds']}秒。")
+        elif event['stage'] == 'request_failed':
+            request_status.warning(f"该次请求未完成（{event['kind']}），用时{event['elapsed_seconds']}秒；已记录失败。")
     return ModelClient(st.session_state["api_base"], st.session_state.get("api_model", ''),
                        st.session_state["api_secret"], max_calls=int(st.session_state.get("api_budget", 40)),
                        protocol=st.session_state.get("api_protocol", "openai"),
@@ -332,13 +334,25 @@ if workflow.startswith("财务"):
                     index=1 if sample == 'financial' else 0)
     section_heading(st, "01　整理证据", "模型候选须人工核对")
     if mode == "从文件提取候选":
+        pdf_pages = {}
+        with st.expander('选择年报页码（可选）'):
+            st.caption('留空读取全文。填写PDF原件页码，例如1,6-7,108-116；保留公司、单位与报表口径页。未选页不会送入模型，输出会标明范围。')
+            for name, raw in uploads:
+                if Path(name).suffix.lower() == '.pdf':
+                    pdf_pages[name] = st.text_input('原件页码 · ' + name, key='pdf_pages_' + digest(raw))
+        page_binding = digest(json.dumps([binding, pdf_pages], sort_keys=True).encode())
+        if st.session_state.get('financial_page_binding') != page_binding:
+            for key in ('parsed', 'file_issues', 'extraction_run', 'candidates', 'extraction_done',
+                        'partial_extraction_confirmed', 'financial_result', 'diagnostic_result', 'dcf_result', 'run'):
+                st.session_state.pop(key, None)
+            st.session_state['financial_page_binding'] = page_binding
         if st.button("读取文件", type="primary"):
             try:
                 run = Run(ROOT / 'work' / 'harness_runs','financial',uploads)
                 write_sources(run,uploads)
                 st.session_state['run'] = run
                 with st.spinner("读取可提取的文字…"):
-                    parsed,issues = parse_files(uploads)
+                    parsed,issues = parse_files(uploads,pdf_pages=pdf_pages)
                 st.session_state["parsed"] = parsed
                 st.session_state['file_issues'] = issues
                 if issues:
@@ -436,9 +450,10 @@ if workflow.startswith("财务"):
         with st.expander("候选摘录与状态", expanded=True):
             st.dataframe(pd.DataFrame(candidates)[[key for key in ('company','metric_original','value_original','unit','published_at','source_locator','quote')
                                                   if key in pd.DataFrame(candidates).columns]].rename(columns={**experience.FIELD_LABELS,'quote':'原文摘录'}), hide_index=True, width="stretch")
-        with st.form("financial_confirmation"):
+        candidate_binding = digest(json.dumps([binding, mode, candidates], sort_keys=True, ensure_ascii=False).encode())
+        with st.form("financial_confirmation_" + candidate_binding):
             editor = st.data_editor(pd.DataFrame([{k: row.get(k, "") for k in FIELDS} for row in candidates]),
-                                    num_rows="dynamic", width="stretch", key="financial_editor_" + binding,
+                                    num_rows="dynamic", width="stretch", key="financial_editor_" + candidate_binding,
                                     column_config={key: st.column_config.TextColumn(experience.FIELD_LABELS.get(key,key)) for key in FIELDS})
             st.caption('报表范围：consolidated是合并、parent是母公司；annual是年度；original是原版、restated是更正。没有原件依据的字段留空。')
             cutoff = st.date_input("信息截止日", value=date.today())
