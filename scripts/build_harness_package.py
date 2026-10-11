@@ -33,7 +33,8 @@ def main():
                "original_uploads_included": False, "real_api_verified_by_automated_checks": False,
                "provider_validation_record": "docs/harness/connection_review_20261010.md",
                "provider_configuration_record": "docs/harness/model_connections_20261011.md",
-               "product_review_record": "docs/harness/error_review_20261011/review.md",
+               "product_review_record": "docs/harness/data_alignment_20261011/review.md",
+               "prior_error_review_record": "docs/harness/error_review_20261011/review.md",
                "prior_design_report_review_record": "docs/harness/desk_review_20261011/review.md",
                "prior_recovery_review_record": "docs/harness/productization_20261011/review.md",
                "prior_provider_review_record": "docs/harness/provider_product_20261011/review.md"}

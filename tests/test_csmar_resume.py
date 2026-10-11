@@ -36,6 +36,32 @@ def test_preview_is_offline_and_partial_return_resume_uses_actual_ids(tmp_path):
     assert received_ids(tmp_path) == set() and preview(tmp_path)["pending_ids"] == 1
 
 
+@pytest.mark.parametrize("name,allowed", [("metadata/verification.json", True),
+                                         ("metadata/current_dictionary.json", False)])
+def test_working_metadata_update_is_reported_without_exempting_sources(tmp_path, name, allowed):
+    fixture(tmp_path)
+    path = tmp_path / name
+    path.write_text('{"round":1}', encoding="utf-8")
+    checkpoint_path = tmp_path / "reports/CODEX_RECEIVED_SOURCE_CHECKPOINT.json"
+    checkpoint = json.loads(checkpoint_path.read_text())
+    checkpoint["files"].append({"path": name, "bytes": path.stat().st_size,
+                                "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+    checkpoint_path.write_text(json.dumps(checkpoint), encoding="utf-8")
+    frozen_checkpoint = checkpoint_path.read_bytes()
+    path.write_text('{"round":2}', encoding="utf-8")
+    if allowed:
+        result = preview(tmp_path)
+        assert not result["integrity"]["originals_unchanged"]
+        assert result["raw_integrity"]["originals_unchanged"]
+        assert result["working_metadata_changed"] == [name]
+        assert result["pending_ids"] == 1
+        # A legitimate metadata update never authorizes changing an old raw file.
+        (tmp_path / checkpoint["files"][0]["path"]).write_text('{}', encoding="utf-8")
+    with pytest.raises(ValueError, match="Original source missing or changed"):
+        preview(tmp_path)
+    assert checkpoint_path.read_bytes() == frozen_checkpoint
+
+
 @pytest.mark.parametrize("security,date", [("P50302", "2025-04-23"), ("P50100", "2026-04-23")])
 def test_fund_or_wrong_date_window_is_rejected(tmp_path, security, date):
     fixture(tmp_path, security, date)

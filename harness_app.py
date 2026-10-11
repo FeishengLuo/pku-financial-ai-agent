@@ -17,7 +17,7 @@ import streamlit as st
 # changed local tool files, in dependency order; no process restart or credential reset.
 dependencies_changed = False
 for module_name in ('documents', 'store', 'providers', 'api', 'exports', 'presentation', 'reports', 'intake', 'feedback', 'assistance', 'financial', 'diagnostics', 'research',
-                    'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'results', 'experience'):
+                    'conditions', 'quant', 'strategy_diagnostics', 'research_ui', 'engine', 'results', 'catalog', 'catalog_ui', 'experience'):
     module = importlib.import_module('src.harness.' + module_name)
     source_hash = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
     api_module = importlib.import_module('src.harness.api')
@@ -132,7 +132,7 @@ def apply_connection_preset():
 
 with st.sidebar:
     st.markdown('<div class="c2v-brand"><div class="c2v-brand-name">Claim2Value</div><div class="c2v-brand-sub">研究工作台</div></div>', unsafe_allow_html=True)
-    desk_page = st.radio('页面', ['开始', '工作区', '教程与示例', '成果记录', '模型与套餐'], key='desk_page', width='stretch')
+    desk_page = st.radio('页面', ['开始', '工作区', '资料目录', '教程与示例', '成果记录', '模型与套餐'], key='desk_page', width='stretch')
     workflow = st.radio("研究方向", ["财务／估值研究", "量化处理与回测"], key='desk_direction', width='stretch',
                         on_change=lambda: st.session_state.update(desk_page='工作区', desk_example=None))
     connection = st.session_state.get('connection_result')
@@ -245,6 +245,13 @@ if desk_page == '成果记录':
     st.stop()
 if desk_page == '模型与套餐':
     providers.render_guide()
+    st.stop()
+if desk_page == '资料目录':
+    from src.harness.catalog_ui import render as render_catalog
+    try:
+        render_catalog(ROOT)
+    except Exception as exc:
+        show_error(exc,st.session_state.get('api_secret',''))
     st.stop()
 
 page_heading(st, '研究工作区', '写清问题，准备材料，再核对结果。高级计算按需开启。')
