@@ -1,6 +1,6 @@
 > 当前试用入口：Windows双击 `start_harness.bat`，打开 http://127.0.0.1:8510 。选择观点检查、财务整理或策略回测；首次使用可从教程载入合成样例。使用 `industry-research-harness-20261010` 分支。[操作教程](docs/harness/getting_started.md)、[同学测试](docs/harness/teammate_trial.md)、[最新文件读取与失败恢复Review](docs/harness/error_review_20261011/review.md)、[界面与报告Review](docs/harness/desk_review_20261011/review.md)。新运行采用新版报告格式，历史底稿保持原样。下面保留历次开发与比赛记录；旧01—07材料和冻结技术题未被覆盖。
 
-> 2026-10-11真实案例：Codex自行取得4份公开原件，实际运行Kimi观点审查、24行财务参考表计算和1452行行情回测，保存实际下载与失败。模型分类仍有错误，财务自动提取因TLS中断失败；不称真人试用或提取成功。[原件与输入](docs/harness/real_cases_20261011/sources.md)、[实际结果与限制](docs/harness/real_cases_20261011/review.md)。
+> 2026-10-11真实案例：Codex自行取得4份公开原件，实际运行Kimi观点审查、财务整理和1452行行情回测。财务首次TLS中断后已恢复：32条定位候选只匹配20/24个不同目标，6条误用母公司数字；经Codex逐页核对与补录形成24条可校验记录。失败、原始候选和修正分别保留，不称全部自动提取或真人试用。[原件与输入](docs/harness/real_cases_20261011/sources.md)、[实际结果与限制](docs/harness/real_cases_20261011/review.md)。
 
 > 2026-10-11模型与研究成果更新：新增主流服务和套餐说明、三步连接指南、研究待核对事项清单，以及无API量化数据体检。配置依据、真实测试边界和用途见[连接指南](docs/harness/model_connections_20261011.md)、[工作台用途](docs/harness/product_value_20261011.md)、[本轮Review](docs/harness/provider_product_20261011/review.md)。继续使用现有测试分支；新工作台尚未重建旧01—07材料。
 

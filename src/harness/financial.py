@@ -106,6 +106,13 @@ def extract(run: Run, documents: list[dict], task: str, client: ModelClient, *, 
             return cached['records'], cached['rejected'], True
         try:
             response = client.json(EXTRACT_SYSTEM, {"task": task, "pieces": pieces})
+            # Keep the proposal before anchoring: rejected quotes cannot be
+            # audited from record numbers alone. Private cache is excluded from
+            # output downloads and deployment artifacts.
+            raw_directory = cache / 'raw_responses'
+            raw_directory.mkdir(exist_ok=True)
+            (raw_directory / path.name).write_text(
+                json.dumps(response, ensure_ascii=False), encoding='utf-8')
             records, bad = anchor_records(response, pieces)
         except APIError as exc:
             size = sum(len(p['text']) for p in pieces)

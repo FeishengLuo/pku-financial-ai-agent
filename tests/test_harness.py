@@ -300,6 +300,26 @@ def test_failed_multibatch_run_resumes_after_budget_without_repaying_completed_b
     assert run.metadata["status"] == "awaiting_review"
 
 
+def test_rejected_financial_proposal_retained_privately_without_repaying(tmp_path, local_api):
+    url, handler = local_api
+    doc = parse(b"revenue 100", "x.txt")
+    proposal = {"records": [{"source_file": doc["source_file"], "source_locator": "line:1",
+                             "quote": "revenue 999", "value_original": "999"}], "notes": []}
+    handler.content = proposal
+    run = Run(tmp_path, "financial", [("x.txt", b"revenue 100")])
+    key = "credential_32_chars_for_test_only"
+    assert extract(run, [doc], "revenue", ModelClient(url, "mock", key)) == []
+    raw = list((run.path / 'cache/raw_responses').glob('*.json'))
+    assert len(raw) == 1 and json.loads(raw[0].read_text(encoding='utf-8')) == proposal
+    rejected = json.loads((run.path / 'outputs/rejected_candidates.json').read_text(encoding='utf-8'))
+    assert rejected[0]['reason'] == 'quote_or_locator_not_in_input'
+    assert extract(run, [doc], "revenue", ModelClient(url, "mock", key)) == []
+    assert len(handler.requests) == 1
+    with zipfile.ZipFile(io.BytesIO(run.bundle())) as archive:
+        assert not any('raw_responses' in name or name.startswith('cache/') for name in archive.namelist())
+    assert all(key.encode() not in p.read_bytes() for p in run.path.rglob('*') if p.is_file())
+
+
 def test_unsupported_model_code_plan_rejected(tmp_path, local_api):
     url, handler = local_api
     handler.content = {"mapping": {}, "strategy": "momentum", "lookback": 20, "top_n": 1, "fee_bps": 10,

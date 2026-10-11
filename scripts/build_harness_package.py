@@ -35,7 +35,7 @@ def main():
                "provider_configuration_record": "docs/harness/model_connections_20261011.md",
                "product_review_record": "docs/harness/data_alignment_20261011/review.md",
                "real_case_review_record": "docs/harness/real_cases_20261011/review.md",
-               "real_case_model_boundary": "Kimi industry review tested; financial extraction failed TLS; automated checks are not provider or human trials",
+               "real_case_model_boundary": "Kimi industry and financial extraction tested; 20/24 financial targets matched before operator correction and 4-row supplementation; automated checks are not human trials",
                "prior_error_review_record": "docs/harness/error_review_20261011/review.md",
                "prior_design_report_review_record": "docs/harness/desk_review_20261011/review.md",
                "prior_recovery_review_record": "docs/harness/productization_20261011/review.md",
