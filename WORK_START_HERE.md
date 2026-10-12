@@ -29,6 +29,6 @@ bash start_harness.sh
 - 设计说明汇总：[docs/harness/design-notes.md](docs/harness/design-notes.md)
 - 数据说明汇总：[docs/harness/data-notes.md](docs/harness/data-notes.md)
 - 历次开发记录：[docs/CHANGELOG.md](docs/CHANGELOG.md)
-- 初赛与旧版 Demo 归档：`legacy/`
+- 初赛版本的本地 Demo 仍在仓库根目录（`app.py`、`start_demo.*`），不是当前入口；冻结的技术题见 `deliverables/` 下的提交包。
 
 商业数据库原始导出、校园账号与密钥留在授权私有目录，不进入本仓库与提交包。
