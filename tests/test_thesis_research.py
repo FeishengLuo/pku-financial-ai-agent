@@ -63,6 +63,20 @@ def test_retrieval_represents_both_files_and_reports_actual_coverage():
     assert "not_full" in coverage["method"]
 
 
+def test_explanation_amount_missing_from_excerpt_is_flagged_but_years_are_not():
+    from src.harness.research import explanation_number_flags
+    quote = "应付票据 1,234,567.00 元，项目延期至2028年12月31日"
+    assert explanation_number_flags("票据金额1234567.00元，2027年仍未投产", quote) == []
+    flags = explanation_number_flags("另有票据 9,876,543.21 元，占比35.5%，共7项", quote)
+    assert flags == ["解释中的数字未出现在本条摘录：9876543.21", "解释中的数字未出现在本条摘录：35.5%"]
+    piece = {"piece_id": "p1", "text": quote, "source_file": "a.txt", "source_locator": "line:1",
+             "source_sha256": "0" * 64, "metadata": {}}
+    result = anchor_assessment({"evidence": [{"piece_id": "p1", "quote": "应付票据 1,234,567.00 元", "stance": "context",
+                                              "fact_type": "historical", "explanation": "另有 5,000,000 元未在此摘录"}]},
+                               [piece], CONDITION)
+    assert any("5000000" in flag for flag in result["evidence"][0]["rule_flags"])
+
+
 def test_support_and_counterevidence_stay_candidates_with_explicit_parameter_link():
     pieces, _ = retrieve(corpus(), scope(), ["产能"])
     result = anchor_assessment(response(pieces), pieces, CONDITION)

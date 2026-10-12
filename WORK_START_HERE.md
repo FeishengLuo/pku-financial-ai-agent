@@ -1,40 +1,34 @@
-# 当前从这里开始
+# Claim2Value 研究工作台
 
-2026-10-12新一批CSMAR已独立查收：[实际增量与记录差异](docs/harness/data_intake_20261012/review.md)。新增18份raw，昨日54份raw不变；基本信息新增472个唯一ID，其中目标A股441个，已收证券索引对应的1868个目标基本信息全部齐全，全文仍为0。旧待续清单1940已过时，实际安全预览0任务；不要重取已完成表。私人收据和原件准备清单在 `work/csmar_intake_20261012/`，当前正式字段定义及公告原件仍需补。下面保留旧轮次结果，不作当前缺口。
+面向机器人产业链研究的本地工作台。三个任务：**观点审查**（把企业表述拆成待检查条件，在材料中检索支持与反证）、**财务整理**（从年报提取财务候选，核验后做两期盈利变化）、**策略回测**（先体检行情数据，再算净值、回撤与同费率基准）。
 
-2026-10-11真实案例验证：[原件与操作样例](docs/harness/real_cases_20261011/sources.md)、[本次结果与失败记录](docs/harness/real_cases_20261011/review.md)。Codex自行取得4份公开公告并查看23张原页；Kimi实际处理7项观点审查，39条合格定位候选仍有分类问题。财务首次TLS失败后已经恢复，32条定位候选覆盖20/24个不同目标，6条误用母公司数字；逐项修正与4条原页补录后24行校验通过。1452行行情已完成页面计算和下载。私人记录在 `work/real_case_validation_20261011/`；不称全部自动提取或真人试用，旧01—07未自动重建。以下保留各阶段历史结果。
+## 怎么开始
 
-2026-10-11数据查收与比赛对齐：[独立查收记录](docs/harness/data_alignment_20261011/review.md)。33份旧raw不变，7份工作metadata更新；已收索引1,868个目标公告ID中基本信息1,427个、尚缺441个，全文0份。工作台新增“资料目录”检索与原件准备清单，默认不调用模型；主营构成666行仍有定义缺口，未自动进入估值。公告续取离线预览为5任务441个ID；私人明细在 `work/csmar_intake_20261011/`。本轮540项通过、2项跳过，42组真实Chrome检查，实际模型服务商调用为零。[使用方法](docs/harness/announcement_catalog.md)、[后续前端改版交接](docs/harness/frontend_handoff_20261011.md)。旧正式01—07材料还未重建为新版harness，继续用当前测试分支。
+```bash
+# Windows
+start_harness.bat
+```
 
-2026-10-11最新检查：[文件读取、失败提示与续取Review](docs/harness/error_review_20261011/review.md)。损坏文件逐份说明，读取阻断可恢复；连接故障分类提示，热更新后的批次续取已检验。530项通过、2项跳过，34组真实Chrome检查；实际服务商调用为零。继续使用现有分支，旧材料状态见下文。
+```bash
+# Linux / macOS
+bash start_harness.sh
+```
 
-当前工作台检查见[界面、文案与报告Review](docs/harness/desk_review_20261011/review.md)。测试继续使用 `industry-research-harness-20261010`，启动入口和本地端口不变；报告正文、新增诊断历史记录及失败重跑已复核。新运行采用新版报告，旧底稿不改写。以下按各自日期保留历史状态。
+浏览器打开 http://127.0.0.1:8510 。默认无需账号；财务核验、数据体检与回测都是本地规则，**不需要模型密钥**。只有候选整理与观点检索要按需连接自备的模型接口。
 
-2026-10-11模型与成果更新：预设覆盖更多国内外API和套餐说明，新增“模型与套餐”新手入口、研究待核对事项Excel和本地量化数据体检。[连接指南](docs/harness/model_connections_20261011.md)、[用途与边界](docs/harness/product_value_20261011.md)、[本轮检查](docs/harness/provider_product_20261011/review.md)。继续拉取 `industry-research-harness-20261010`；预设不代表逐家真实联通或模型质量验证。
+## 当前状态
 
-2026-10-11界面调整：研究任务按行排列，材料和输出并列展示；工作台采用独立样式，手机侧栏和键盘入口实测可用。[本次设计与检查](docs/harness/frontend_design_20261011/review.md)。测试继续使用 `industry-research-harness-20261010` 分支。
+- 已核对案例：绿的谐波 2024 年年度报告（13 页公开披露文本）。
+- 财务提取有逐字引用锚定与报表口径校验；同一份原件两轮对比的收据见 `05_技术证据/本轮口径修复_20261012/`。
+- Windows 11 一键启动已实际验收；Linux 未在真机验证。
+- 真人试用、CSMAR 正式字段定义、四条待证技术声明仍待补齐。
 
-2026-10-11使用体验调整：默认任务首页，新增教程与直接载入样例、无API本地计算体验、成果记录下载。估值和策略诊断按需开启，常用财务列改用中文展示；原有核验要求保留。[入门教程](docs/harness/getting_started.md)、[本轮Review](docs/harness/customer_experience_review_20261011.md)。同学继续拉取 `industry-research-harness-20261010`；没有重建旧01—07正式材料。
+## 文档与入口
 
-2026-10-11同学试用反馈已按13张截图核对并修复：长报告分批、有限重试、部分成果与缓存续取、可见披露日期、本地计划模板、中文现金流输入。测试分支继续使用 `industry-research-harness-20261010`；[更新与试用入口](docs/harness/teammate_trial.md)、[本轮Review](docs/harness/peer_feedback_review_20261011.md)。464项测试和8组本机模拟页面流程通过；未调用同学的实际网关，未将开发核验当真人业务效果。此次研究工作台包更新，冻结技术题与旧01—07材料不在改动范围。
+- 产品操作与教程：[docs/harness/getting_started.md](docs/harness/getting_started.md)、[docs/harness/industry_workflow.md](docs/harness/industry_workflow.md)
+- 设计说明汇总：[docs/harness/design-notes.md](docs/harness/design-notes.md)
+- 数据说明汇总：[docs/harness/data-notes.md](docs/harness/data-notes.md)
+- 历次开发记录：[docs/CHANGELOG.md](docs/CHANGELOG.md)
+- 初赛与旧版 Demo 归档：`legacy/`
 
-2026-10-10 本轮已接入论点审查与明确证据绑定、受产能和投产时点约束的盈利／估值兑现条件、预先声明参数的策略诊断。默认从“论点审查与兑现条件”进入，原财务整理与盈利桥保留。见[产业研究操作](docs/harness/industry_workflow.md)和[本次Review](docs/harness/industry_review_20261010.md)。全库401项、5项新增浏览器流程、8项旧流程回归通过；真实模型质量和真人业务效果未测。下文旧状态保留为历史记录，旧01—07包未覆盖。
-
-2026-10-10 产业投研方向复核：重新读取复赛通知与附件，检查原项目和新工作台的差距，并接入两期盈利变化解释。财务数据确认和校验后，选择年度比较口径，点击“生成盈利变化研究底稿”；详见 [产品针对性审查与改造](docs/harness/product_revision_20261010.md)。论点证据审查、带产能和时点约束的估值兑现条件，以及策略整体诊断仍为后续模块，不将它们写成已完成。旧正式01—07材料暂未重建。
-
-2026-10-10 产品方向调整：负责人要求模型 API＋上传文件的研究 harness，财务／估值与量化处理／回测分开。新增 `harness_app.py`、`start_harness.bat`，本机端口 8510；见 [操作说明](docs/harness/README.md) 与 [检查记录](docs/harness/review.md)。运行私存于 `work/harness_runs/`，独立部署包位于 `deliverables/harness_20261010/`。本轮沿用已完成 UI 分支为基础，不修改冻结技术题，也没有自动重建旧 01—07 提交包；新产品进入正式提交材料前仍需真实模型试跑、真人审阅和材料重录。
-
-2026-10-10最新状态：[本机执行与交付Review](docs/semifinal/execution_update_20261010.md)。已接入34条公开财务样本，270项CSMAR原值仍待核；当前冻结技术题已在Windows独立复现，部署、真实录屏与01—07审阅材料完成。比赛工作区唯一入口为 `D:\notes\pkuaiagent`。
-
-私人交付入口：工作区根目录 `复赛推进入口.md`；审阅材料位于 `deliverables/semifinal_20261012/`，实际运行证据位于 `work/semifinal_implementation_20261010/`。原始商业数据、比赛测试数据和私人提交包留在本地，不进入公开仓库。签名、真人试用、最终人工审阅及上传回执仍需负责人完成。
-
-CSMAR公告续取用 `scripts/resume_csmar_announcements.py`，默认仅离线预览。只在已有校园权限且额度可用时显式 `--execute`；保留9个任务及按实际返回ID减少缺口，任何非零响应立即停止。正式字段定义仍未补齐。
-
-2026-10-09：由 Codex 独立推进全部可完成项，暂不等待或分派 Kimi、Qwen 工作。负责人当前只需提供有校园数据库权限的原始导出。
-
-1. [CSMAR 第一包下载清单](docs/semifinal/csmar_first_export.md)：688017、2024 年、合并三张表和字段说明，收到后再扩展。
-2. [财务原页 Review](docs/semifinal/evidence/financial_review_20261009/review.md)：修正历史输入单位，新增 34 行真实年报数据；历史参考不会自动校准预测。
-3. [离线接收工具](scripts/financial_intake.py)与[带溯源的长表模板](docs/semifinal/templates/financial_long_v2.csv)。
-4. [10 月 9 日已完成材料与技术题 Review](docs/semifinal/execution_update_20261009.md)。该准备包是当时冻结版本，不自动包含后续财务改动。
-
-下一步由 Codex 收原始导出、按真实字典映射、对照公告核查，再建立财务变化与技术声明之间可审查的参数联系。公开证据补充、验证、交付与材料修订继续由 Codex 执行。历史多模型任务保留供以后接续，当前不是执行依赖。
+商业数据库原始导出、校园账号与密钥留在授权私有目录，不进入本仓库与提交包。

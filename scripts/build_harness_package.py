@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     paths = [ROOT / name for name in ("harness_app.py", "start_harness.bat", "start_harness.sh", "requirements-harness.txt",
+                                      ".streamlit/config.toml",
                                       "src/review_ui.py", "src/financial_intake.py", "src/state_verifier.py",
                                       "src/quantity_text.py", "scripts/launch_harness.py")]
     paths += sorted((ROOT / "src/harness").glob("*.py"))
@@ -31,15 +32,15 @@ def main():
     receipt = {"path": str(archive_path), "members": len(manifest) + 1, "bytes": archive_path.stat().st_size,
                "sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(), "member_hashes": "passed",
                "original_uploads_included": False, "real_api_verified_by_automated_checks": False,
-               "provider_validation_record": "docs/harness/connection_review_20261010.md",
-               "provider_configuration_record": "docs/harness/model_connections_20261011.md",
-               "product_review_record": "docs/harness/data_alignment_20261011/review.md",
-               "real_case_review_record": "docs/harness/real_cases_20261011/review.md",
+               "provider_validation_record": "docs/harness/model-connection-notes.md",
+               "provider_configuration_record": "docs/harness/model-connections.md",
+               "product_review_record": "docs/harness/data-alignment.md",
+               "real_case_review_record": "docs/harness/real-cases/README.md",
                "real_case_model_boundary": "Kimi industry and financial extraction tested; 20/24 financial targets matched before operator correction and 4-row supplementation; automated checks are not human trials",
-               "prior_error_review_record": "docs/harness/error_review_20261011/review.md",
-               "prior_design_report_review_record": "docs/harness/desk_review_20261011/review.md",
-               "prior_recovery_review_record": "docs/harness/productization_20261011/review.md",
-               "prior_provider_review_record": "docs/harness/provider_product_20261011/review.md"}
+               "prior_error_review_record": "docs/harness/failure-handling.md",
+               "prior_design_report_review_record": "docs/harness/ui-copy-review.md",
+               "prior_recovery_review_record": "docs/harness/packaging-notes.md",
+               "prior_provider_review_record": "docs/harness/provider-notes.md"}
     (destination / "package_receipt.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(receipt, ensure_ascii=False))
 

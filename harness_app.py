@@ -296,13 +296,14 @@ def show_outputs():
     results.render_snapshot(run.path,run.metadata,'current_'+run.path.name)
     with st.expander('文件清单与运行详情'):
         st.caption('运行编号：' + run.path.name)
-        st.caption(str(run.path))
-        st.caption("成果状态：" + run.metadata["status"])
+        st.caption("成果状态：" + experience.STATUS.get(run.metadata['status'], run.metadata['status']))
         st.write('输出：' + '、'.join(path.name for path in sorted((run.path/'outputs').glob('*')) if path.is_file()))
     st.caption("ZIP 包含输出、输入指纹和运行步骤；不包含上传原件或密钥。财务输出可能包含原文摘录，请自行确认分享范围。")
     with st.expander("查看处理步骤"):
         events = [json.loads(line) for line in (run.path / "events.jsonl").read_text(encoding="utf-8").splitlines()]
-        st.json(events)
+        st.dataframe(pd.DataFrame([{'时间': event.get('at', ''), '步骤': experience.EVENT_LABELS.get(event.get('stage', ''), event.get('stage', '')),
+                                    '说明': event.get('note', '')} for event in events]), hide_index=True)
+        st.caption('步骤记录保存在本机运行目录，用于复核本次执行顺序。')
 
 
 if not uploads:
@@ -416,6 +417,20 @@ if workflow.startswith("财务"):
                 st.caption(f"已完成{coverage['completed_batches']}／{coverage['total_batches']}批，候选{coverage['candidate_count']}条。完成不等于字段已核实。")
                 with st.expander('逐批状态与未完成范围', expanded=not coverage['complete']):
                     st.dataframe(pd.DataFrame(coverage['batches']), hide_index=True)
+                rejected_path = extraction_run.path / 'outputs' / 'rejected_candidates.json'
+                rejected_rows = json.loads(rejected_path.read_text(encoding='utf-8')) if rejected_path.exists() else []
+                if rejected_rows:
+                    scope_names = {'consolidated': '合并', 'parent': '母公司'}
+                    def rejection_reason(row):
+                        if row.get('reason') == 'statement_scope_conflicts_with_heading':
+                            return f"标为{scope_names.get(row.get('claimed_scope'), row.get('claimed_scope'))}，所在表为{scope_names.get(row.get('heading_scope'), row.get('heading_scope'))}"
+                        return {'quote_or_locator_not_in_input': '摘录或页码与原文不符', 'not_object': '返回格式不符'}.get(row.get('reason'), row.get('reason', ''))
+                    with st.expander(f'未采用的候选 {len(rejected_rows)} 条及原因'):
+                        st.dataframe(pd.DataFrame([{'批次': row.get('batch', ''), '原因': rejection_reason(row),
+                                                    '指标': row.get('canonical_metric', ''), '报告期': row.get('report_period', ''),
+                                                    '数值': row.get('value_original', ''), '位置': row.get('source_locator', ''),
+                                                    '原文摘录': row.get('quote', '')} for row in rejected_rows]), hide_index=True, width='stretch')
+                        st.caption('口径冲突按原件页序中最近的报表标题判断，跨页续表沿用上一页标题。摘录不符的提案原文保存在本机私有缓存，不进入下载包。')
                 if not coverage['complete'] and st.session_state.get('candidates'):
                     partial_binding = digest(json.dumps({'batches': coverage['batches'], 'candidates': st.session_state['candidates']}, sort_keys=True, ensure_ascii=False).encode())
                     if st.session_state.get('partial_approval_binding') != partial_binding:
@@ -446,16 +461,25 @@ if workflow.startswith("财务"):
             st.info("请同时上传财务长表 CSV 和被引用的原件。示例可在空白页面下载。")
     candidates = st.session_state.get("candidates")
     if candidates:
+        extraction_run = st.session_state.get('extraction_run')
+        if extraction_run and mode == '从文件提取候选':
+            rejected_path = extraction_run.path / 'outputs' / 'rejected_candidates.json'
+            rejected_count = len(json.loads(rejected_path.read_text(encoding='utf-8'))) if rejected_path.exists() else 0
+            columns = st.columns(3)
+            columns[0].metric("收下候选", f"{len(candidates)} 条")
+            columns[1].metric("逐字校验未采用", f"{rejected_count} 条")
+            columns[2].metric("原文锚定", "已在标注页找到" if not rejected_count else "有未采用项")
+            st.caption("模型提出的每条候选都要给出逐字原文摘录，找不到即拒收；被拒提案原文留在本机私有缓存，不进入下载包。")
         section_heading(st, "02　核对并计算", "缺少披露日期或口径会阻止计算")
         with st.expander("候选摘录与状态", expanded=True):
-            st.dataframe(pd.DataFrame(candidates)[[key for key in ('company','metric_original','value_original','unit','published_at','source_locator','quote')
+            st.dataframe(pd.DataFrame(candidates)[[key for key in ('company','report_period','statement_scope','period_type','metric_original','value_original','unit','published_at','source_locator','quote')
                                                   if key in pd.DataFrame(candidates).columns]].rename(columns={**experience.FIELD_LABELS,'quote':'原文摘录'}), hide_index=True, width="stretch")
         candidate_binding = digest(json.dumps([binding, mode, candidates], sort_keys=True, ensure_ascii=False).encode())
         with st.form("financial_confirmation_" + candidate_binding):
             editor = st.data_editor(pd.DataFrame([{k: row.get(k, "") for k in FIELDS} for row in candidates]),
                                     num_rows="dynamic", width="stretch", key="financial_editor_" + candidate_binding,
                                     column_config={key: st.column_config.TextColumn(experience.FIELD_LABELS.get(key,key)) for key in FIELDS})
-            st.caption('报表范围：consolidated是合并、parent是母公司；annual是年度；original是原版、restated是更正。没有原件依据的字段留空。')
+            st.caption('报表范围填「合并」或「母公司」；期间口径填「时点」或「流量」；版本填「原版」或「更正」。没有原件依据的字段留空，提交时会按这两种写法归一。')
             cutoff = st.date_input("信息截止日", value=date.today())
             confirm = st.checkbox("我已对照原件核对字段、披露日期、单位、报表口径和更正版本。")
             submitted = st.form_submit_button("校验并生成财务成果", disabled=not (st.session_state.get("extraction_done", False) or st.session_state.get('partial_extraction_confirmed', False)))
@@ -614,8 +638,22 @@ else:
             show_error(exc,st.session_state.get('api_secret',''))
     proposal = st.session_state.get("proposal", {}) if st.session_state.get("proposal_table") == (chosen, str(sheet)) else {}
     if proposal:
-        st.json(proposal)
-        st.caption("这是待确认计划。下面的列映射和参数决定实际执行。")
+        strategy_names = {'momentum': '价格动量', 'factor': '上传的已有因子'}
+        direction_names = {'descending': '高值优先', 'ascending': '低值优先'}
+        columns = st.columns(4)
+        columns[0].metric("信号来源", strategy_names.get(proposal.get("strategy", ""), proposal.get("strategy", "—")))
+        columns[1].metric("动量窗口", f"{proposal.get('lookback', '—')} 日")
+        columns[2].metric("持仓数", f"{proposal.get('top_n', '—')}")
+        columns[3].metric("单边费率", f"{proposal.get('fee_bps', '—')} bps")
+        if st.button("把该计划填入下方参数", key="apply_" + config_key):
+            st.session_state["lb_" + config_key] = int(proposal.get("lookback", 20))
+            st.session_state["tn_" + config_key] = int(proposal.get("top_n", 10))
+            st.session_state["fee_" + config_key] = float(proposal.get("fee_bps", 2))
+            st.session_state["direction_" + config_key] = proposal.get("direction", "high")
+            st.rerun()
+        st.caption("这是待确认计划；点击按钮填入下方参数后仍可手动修改。下面的列映射和参数决定实际执行。")
+        with st.expander('查看模型返回的原始计划'):
+            st.json(proposal)
     config_key = digest(json.dumps([binding, chosen, str(sheet), proposal], sort_keys=True).encode())
     strategy = st.selectbox("信号来源", ["momentum", "factor"],
                             index=1 if proposal.get("strategy") == "factor" else 0,

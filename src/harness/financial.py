@@ -9,6 +9,7 @@ import csv
 import io
 import json
 import math
+import re
 from collections import defaultdict
 from datetime import date
 
@@ -31,7 +32,62 @@ substring from the supplied piece). Source_file and locator must match the suppl
 Extract only reported historical numbers requested by the task, not forecasts or assumptions.
 Never guess publication date, scope, units, codes or revisions; missing definitions remain empty.
 Comparison figures belong to the actual source disclosure date, not the comparison year.
+Statement tables continue across pages without repeating their title. A piece may carry
+statement_title_in_effect: the latest statement title (合并… or 母公司…) printed before the piece
+starts. Set statement_scope from a title inside the piece text when it precedes the row, otherwise
+from statement_title_in_effect; when neither exists, leave statement_scope empty.
 Supported canonical metrics: """ + ", ".join(sorted(STOCK_METRICS | FLOW_METRICS))
+
+# A title line such as 母公司利润表 or 合并资产负债表（续）; narrative mentions are not headings.
+STATEMENT_HEADING = re.compile(r'^[ \t]*(合并|母公司)(资产负债表|利润表|现金流量表|所有者权益变动表)'
+                               r'[ \t]*(?:[（(]续[)）])?[ \t]*$', re.M)
+
+
+def _ordinal(locator: str):
+    kind, _, number = locator.partition(':')
+    return (kind, int(number)) if number.isdigit() else None
+
+
+def statement_marks(documents: list[dict]) -> dict:
+    """Statement titles by unit, carrying the last title into the next consecutive page or line."""
+    marks = {}
+    for doc in documents:
+        carried, previous = None, None
+        for part in doc['parts']:
+            ordinal = _ordinal(part['locator'])
+            if ordinal is None or previous is None or ordinal[0] != previous[0] or ordinal[1] != previous[1] + 1:
+                carried = None
+            found = [(m.start(), 'consolidated' if m.group(1) == '合并' else 'parent', m.group(0).strip())
+                     for m in STATEMENT_HEADING.finditer(part['text'])]
+            unit = ([(0,) + carried] if carried else []) + found
+            marks[(doc['source_file'], part['locator'])] = unit
+            carried = unit[-1][1:] if unit else None
+            previous = ordinal
+    return marks
+
+
+def heading_at(unit: list, position: int):
+    current = None
+    for start, scope, title in unit:
+        if start > position:
+            break
+        current = (scope, title)
+    return current
+
+
+def scope_conflict(record: dict, page_text: str, unit: list):
+    """Heading scope that contradicts the claimed scope at every place the quote occurs, else None."""
+    claimed, quote = record.get('statement_scope', ''), record.get('quote', '')
+    if claimed not in {'consolidated', 'parent'} or not quote:
+        return None
+    seen, start = set(), page_text.find(quote)
+    while start != -1:
+        heading = heading_at(unit, start)
+        seen.add(heading[0] if heading else None)
+        start = page_text.find(quote, start + 1)
+    if not seen or None in seen or claimed in seen:
+        return None
+    return seen.pop() if len(seen) == 1 else None
 
 
 def anchor_records(response: dict, pieces: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -61,6 +117,17 @@ def extract(run: Run, documents: list[dict], task: str, client: ModelClient, *, 
     if client.api_key in task:
         raise ValueError("研究要求中包含 API Key，请移除。")
     batches = chunks(documents, limit=getattr(client, 'batch_chars', 6000))
+    marks = statement_marks(documents)
+    page_texts = {(doc['source_file'], part['locator']): part['text'] for doc in documents for part in doc['parts']}
+
+    def annotate(piece):
+        piece = {k: v for k, v in piece.items() if k != 'statement_title_in_effect'}
+        heading = heading_at(marks.get((piece['source_file'], piece['source_locator']), []), piece['offset'])
+        if heading:
+            piece['statement_title_in_effect'] = heading[1]
+        return piece
+
+    batches = [[annotate(piece) for piece in pieces] for pieces in batches]
     cache = run.path / "cache"
     cache.mkdir(exist_ok=True)
     run.write("source_index.json", [{k: v for k, v in doc.items() if k != "parts"} for doc in documents])
@@ -93,6 +160,14 @@ def extract(run: Run, documents: list[dict], task: str, client: ModelClient, *, 
 
     def collect(records, bad, index):
         for record in records:
+            unit = (record.get('source_file', ''), record.get('source_locator', ''))
+            heading = scope_conflict(record, page_texts.get(unit, ''), marks.get(unit, []))
+            if heading:
+                rejected.append({"batch": index, "reason": "statement_scope_conflicts_with_heading",
+                                 "claimed_scope": record.get('statement_scope', ''), "heading_scope": heading,
+                                 **{k: record.get(k, '') for k in ('canonical_metric', 'report_period', 'value_original',
+                                                                   'source_file', 'source_locator', 'quote')}})
+                continue
             key = json.dumps(record, sort_keys=True, ensure_ascii=False)
             if key not in seen:
                 all_records.append(record)
@@ -122,7 +197,7 @@ def extract(run: Run, documents: list[dict], task: str, client: ModelClient, *, 
             for piece in pieces:
                 step = max(500, min(len(piece['text']), size // 2))
                 for offset in range(0, len(piece['text']), step):
-                    smaller.append([{**piece, 'offset': piece['offset'] + offset, 'text': piece['text'][offset:offset + step]}])
+                    smaller.append([annotate({**piece, 'offset': piece['offset'] + offset, 'text': piece['text'][offset:offset + step]})])
             if hasattr(client, '_status'):
                 client._status('batch_split', original_characters=size, sub_batches=len(smaller))
             records, bad = [], []

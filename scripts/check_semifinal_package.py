@@ -70,7 +70,7 @@ def check(root, online_url="", tools=None, test=None):
         warnings.append("在线可访问性、账号和有效期需实际验收；此脚本不登录页面")
     else:
         deployment = root / "06_本地部署"
-        launchers = ["start.sh", "start_demo.sh", "start_demo.bat", "docker-compose.yml"]
+        launchers = ["start_harness.sh", "start_harness.bat", "start.sh", "start_demo.sh", "start_demo.bat", "docker-compose.yml"]
         if not deployment.is_dir() or not any((deployment / name).is_file() for name in launchers):
             errors.append("未提供在线地址，06_本地部署须有启动文件")
         if not (deployment / "部署说明.md").is_file():

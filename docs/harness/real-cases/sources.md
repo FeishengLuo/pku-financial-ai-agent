@@ -13,7 +13,7 @@
 
 2026-10-11实际下载HTTP200，检查PDF格式、公司名和页数，保存响应收据。原件保存在比赛工作区 `work/real_case_validation_20261011/originals/`，不进入公开Git或部署包。
 
-其他同学可在工作台根目录运行 `python docs/harness/real_cases_20261011/fetch_originals.py`，自动下载到 `work/public_case_originals_20261011/`。脚本只下载上述4份公开PDF，不调用模型或CSMAR；逐份核对已保存哈希，不覆盖内容不同的文件。如果文件已变更或网络失败，会停止并提示，不将新版当成旧原件。也可从表中链接手动取得。
+其他同学可在工作台根目录运行 `python docs/harness/real-cases/fetch_originals.py`，自动下载到 `work/public_case_originals_20261011/`。脚本只下载上述4份公开PDF，不调用模型或CSMAR；逐份核对已保存哈希，不覆盖内容不同的文件。如果文件已变更或网络失败，会停止并提示，不将新版当成旧原件。也可从表中链接手动取得。
 
 Codex查看了23张渲染原页：年报第1、6、7、107—116页（13页），快报全部3页、延期全部4页、更正全部3页。程序提取272页可读文字；文字提取不等于逐页语义核验。下载脚本已经在本机实际取得4份同哈希PDF。
 

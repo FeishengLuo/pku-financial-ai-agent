@@ -104,8 +104,7 @@ def diagnose(run, data, strategy, declared, registry: Path):
                               '比较区间从最晚首次建仓后开始，各账户保留历史持仓，不免费重新建仓；区间以前的买入费仅计入完整生命周期收益。',
                               '年度分段保留原账户收益和成本，净值从1缩放用于展示，不重设持仓；分段回撤只对应分段峰值。',
                               '基准同一共同区间、等权日再平衡及同费率；无末期强制清仓、涨跌停和冲击模型。',
-                              '历史登记按日期重叠保守标记；不识别同样日期是否是不同市场，不能据此声明新留出集。',
-                              '通用工作台诊断不替代比赛匿名因子技术题；2020已查看。']}
+                              '历史登记按日期重叠保守标记；不能据此声明样本外留出集。']}
     run.write('strategy_diagnostics.json', report)
     run.write('experiment_history.json', previous + [entry])
     run.write('strategy_diagnostics.xlsx', workbook({'共同区间': pd.DataFrame(comparisons), '年度分段': pd.DataFrame(segments),

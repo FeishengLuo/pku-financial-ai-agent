@@ -57,6 +57,17 @@ STATUS = {'created':'已建立记录','documents_parsed':'材料已读取','extr
     'earnings_diagnostics_completed':'盈利变化底稿已生成', 'strategy_diagnostics_completed':'参数比较已完成',
     'strategy_diagnostic_declared':'参数已登记，尚未完成比较', 'strategy_diagnostic_failed':'参数比较未完成'}
 
+# Step labels for the run's own event log, so the record reads as a research log
+# rather than internal stage names.
+EVENT_LABELS = {'batch_cached':'该批次直接复用本机缓存','batch_failed':'该批次未完成，已记录',
+    'awaiting_review':'候选已整理，等待人工核对','documents_blocked':'有文件未能读取',
+    'quant_data_checked':'行情数据体检完成','realization_conditions_computed':'情景计算完成',
+    'selected_parameters_operator_confirmed':'操作人已确认所选参数','strategy_diagnostic_declared':'参数已声明登记',
+    'strategy_diagnostic_failed':'参数比较未完成','strategy_diagnostics_completed':'参数比较完成',
+    'thesis_condition_processed':'该检查条件已处理','thesis_conditions_operator_confirmed':'操作人已确认检查条件',
+    'thesis_plan_failed':'检查条件生成未完成','human_fields_confirmed':'操作人已确认手工字段',
+    'extraction_completed':'候选整理完成','financial_completed':'财务结果已生成'}
+
 STYLE = '''<style>
 :root { --paper:#fff; --ink:#25272b; --muted:#62666b; --line:#dededb; --accent:#763b32; }
 .stApp { background:var(--paper); color:var(--ink); }

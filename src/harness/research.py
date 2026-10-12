@@ -19,6 +19,22 @@ import pandas as pd
 CONDITION_TYPES = {"technical", "capacity", "demand", "price", "cost", "financial"}
 PARAMETER_KEYS = {"annual_capacity", "commissioning_date", "asp_yuan", "unit_cost_yuan", "orders_units"}
 PARAMETER_UNITS = {"台/年", "万台/年", "台", "万台", "元/台", "日期"}
+NUMBER = re.compile(r'\d[\d,，]*(?:\.\d+)?%?')
+
+
+def explanation_number_flags(explanation: str, quote: str) -> list[str]:
+    """Amounts or ratios an explanation states that the excerpt itself does not contain."""
+    compact = re.sub(r'[\s,，]', '', quote)
+    flags = []
+    for token in NUMBER.findall(explanation or ''):
+        value = token.replace(',', '').replace('，', '').rstrip('.')
+        digits = value.rstrip('%')
+        is_year = digits.isdigit() and len(digits) == 4 and 1990 <= int(digits) <= 2100
+        if is_year or (digits.isdigit() and len(digits) < 3 and not value.endswith('%')):
+            continue
+        if value not in compact and value not in flags:
+            flags.append(value)
+    return [f'解释中的数字未出现在本条摘录：{value}' for value in flags]
 
 
 def local_plan(question: str, product: str) -> dict:
@@ -202,7 +218,7 @@ def anchor_assessment(response: dict, pieces: list[dict], condition: dict) -> di
                "metadata": piece["metadata"], "status": "anchored_candidate_not_authenticated_or_semantically_confirmed",
                # A research question is not a factual claim. Check the excerpt
                # against its surrounding text, never dates/numbers in the question.
-               "rule_flags": StateVerifier().verify(quote, piece["text"]).flags}
+               "rule_flags": StateVerifier().verify(quote, piece["text"]).flags + explanation_number_flags(explanation, quote)}
         index_map[index] = row
         if not any(r["id"] == eid for r in accepted):
             accepted.append(row)
@@ -260,7 +276,8 @@ def review_thesis(run: Run, client, plan: dict, documents: list[dict], scope: di
                 for row in assessment['evidence']:
                     piece = lookup.get(row['piece_id'])
                     if piece:
-                        row['rule_flags'] = StateVerifier().verify(row['quote'], piece['text']).flags
+                        row['rule_flags'] = (StateVerifier().verify(row['quote'], piece['text']).flags
+                                             + explanation_number_flags(row.get('explanation', ''), row['quote']))
             elif not pieces:
                 assessment = anchor_assessment({"evidence": [], "missing": ["本次截止日内没有日期已确认的可用材料。"]}, [], condition)
             else:
