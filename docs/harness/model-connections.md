@@ -2,7 +2,7 @@
 
 官方文档核对日期：2026-10-11。共34个选项：25个可填写连接的预设、8个会员或套餐说明、1个自定义入口。区域和套餐分别列出，不等于这些数量的独立厂商。
 
-本轮核对官方配置并以本机模拟服务验证请求形状，没有用真实密钥逐家调用，也没有测试各模型的研究质量。GLM／火山／Step编程套餐的当前工作台适用范围未完成核验，只提供说明。
+核对官方配置并以本机模拟服务验证请求形状，没有用真实密钥逐家调用，也没有测试各模型的研究质量。GLM／火山／Step编程套餐的当前工作台适用范围未完成核验，只提供说明。
 
 ## 三步连接
 
@@ -42,9 +42,9 @@
 | Kimi Code 订阅 | 编程订阅／OpenAI兼容文本 | `https://api.kimi.com/coding/v1` | 保留已有连接方式。官方定位是开发工具；金融产品集成建议使用 Kimi 开放平台。仅使用本工作台真实客户端标识，不冒充其他工具。 | [官方](https://www.kimi.com/code/docs/) |
 | Kimi Code（海外） | 编程订阅／OpenAI兼容文本 | `https://api.kimi.ai/coding/v1` | 使用 Kimi Code 专用密钥；面向开发工具，金融产品集成建议使用开放平台。 | [官方](https://www.kimi.com/code/docs/) |
 | 百炼 Coding Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 官方禁止用于自定义应用后端或非交互批量调用，因此此处只提供说明。金融研究请选择千问／百炼按量 API。 | [官方](https://help.aliyun.com/zh/model-studio/coding-plan) |
-| GLM Coding Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 已收录套餐入口；本轮未取得可读的当前范围原文，未确认本工作台使用范围。可用智谱开放 API 接入。 | [官方](https://docs.bigmodel.cn/cn/coding-plan/overview) |
-| 火山 Coding Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 编程套餐与按量 API 的地址、密钥不同；本轮未完成本工作台使用范围核验，先使用方舟按量 API。 | [官方](https://docs.volcengine.com/docs/ark/integrate-third-party-tools?lang=zh) |
-| Step Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 官网已提供订阅入口；本轮未核实套餐端点与本工作台范围，不套用按量密钥。可选阶跃开放 API。 | [官方](https://platform.stepfun.com/) |
+| GLM Coding Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 已收录套餐入口；未取得可读的当前范围原文，未确认本工作台使用范围。可用智谱开放 API 接入。 | [官方](https://docs.bigmodel.cn/cn/coding-plan/overview) |
+| 火山 Coding Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 编程套餐与按量 API 的地址、密钥不同；未完成本工作台使用范围核验，先使用方舟按量 API。 | [官方](https://docs.volcengine.com/docs/ark/integrate-third-party-tools?lang=zh) |
+| Step Plan（说明） | 套餐说明／OpenAI兼容文本 | 说明项，不启用调用 | 官网已提供订阅入口；尚未核实套餐端点与本工作台范围，不套用按量密钥。可选阶跃开放 API。 | [官方](https://platform.stepfun.com/) |
 | ChatGPT 会员／Codex（说明） | 会员说明／OpenAI兼容文本 | 说明项，不启用调用 | 本工作台未接入 ChatGPT／Codex 登录授权。网页会员不自动变成通用 API Key；金融研究请选择 OpenAI API。 | [官方](https://help.openai.com/en/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform) |
 | Claude Pro／Max／Team（说明） | 会员说明／Anthropic Messages | 说明项，不启用调用 | Max／Team 当前可领取 Console 月度 API 额度，领取后用 Console API Key 选择 Claude API。Pro 等计划的具体权益按账户页核对。网页或 Claude Code 登录未接入。 | [官方](https://support.claude.com/en/articles/17154008-monthly-api-credits-for-max-and-team-plans) |
 | Google AI Pro／Ultra（说明） | 会员说明／OpenAI兼容文本 | 说明项，不启用调用 | 本工作台使用 AI Studio／Cloud 项目的 Gemini API Key；未接入 Gemini 网页会员登录，项目额度以 API 账单页为准。 | [官方](https://ai.google.dev/gemini-api/docs/billing/) |
