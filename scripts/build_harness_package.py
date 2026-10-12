@@ -15,7 +15,16 @@ def main():
                                       "src/review_ui.py", "src/financial_intake.py", "src/state_verifier.py",
                                       "src/quantity_text.py", "scripts/launch_harness.py")]
     paths += sorted((ROOT / "src/harness").glob("*.py"))
-    paths += sorted(p for p in (ROOT / "docs/harness").rglob("*") if p.is_file() and "__pycache__" not in p.parts)
+    # Only the usage-facing docs ship; development notes stay in the repository.
+    usage_docs = {"README.md", "getting_started.md", "industry_workflow.md",
+                  "model-connections.md", "announcement_catalog.md"}
+    harness_docs = ROOT / "docs/harness"
+    for path in sorted(harness_docs.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts:
+            continue
+        relative = path.relative_to(harness_docs)
+        if path.name in usage_docs or "examples" in relative.parts:
+            paths.append(path)
     manifest = {str(p.relative_to(ROOT)).replace("\\", "/"): {"bytes": p.stat().st_size,
                 "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths}
     destination = ROOT / "deliverables/harness_20261010"
@@ -32,15 +41,11 @@ def main():
     receipt = {"path": str(archive_path), "members": len(manifest) + 1, "bytes": archive_path.stat().st_size,
                "sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(), "member_hashes": "passed",
                "original_uploads_included": False, "real_api_verified_by_automated_checks": False,
-               "provider_validation_record": "docs/harness/model-connection-notes.md",
                "provider_configuration_record": "docs/harness/model-connections.md",
-               "product_review_record": "docs/harness/data-alignment.md",
+               "getting_started_record": "docs/harness/getting_started.md",
+               "industry_workflow_record": "docs/harness/industry_workflow.md",
                "real_case_review_record": "docs/harness/real-cases/README.md",
-               "real_case_model_boundary": "Kimi industry and financial extraction tested; 20/24 financial targets matched before operator correction and 4-row supplementation; automated checks are not human trials",
-               "prior_error_review_record": "docs/harness/failure-handling.md",
-               "prior_design_report_review_record": "docs/harness/ui-copy-review.md",
-               "prior_recovery_review_record": "docs/harness/packaging-notes.md",
-               "prior_provider_review_record": "docs/harness/provider-notes.md"}
+               "real_case_model_boundary": "Kimi industry and financial extraction tested; 20/24 financial targets matched before operator correction and 4-row supplementation; automated checks are not human trials"}
     (destination / "package_receipt.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(receipt, ensure_ascii=False))
 

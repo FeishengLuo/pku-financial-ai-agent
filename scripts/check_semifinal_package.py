@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 import xml.etree.ElementTree as ET
 import zipfile
 
-REQUIRED = ["01_统一信息表.docx", "02_项目说明.pdf", "03_展示稿.pptx", "04_运行视频.mp4",
+REQUIRED = ["01_统一信息表.docx", "02_项目说明.pdf", "03_展示稿.pdf", "04_运行视频.mp4",
             "07_技术题/submission.csv", "07_技术题/code.zip", "07_技术题/技术题报告.pptx"]
 CALENDAR_SHA = "bda296fe3c1812defa6a164bd8be288fb9d66ae44f99e08635420faae2737dcf"
 
@@ -76,6 +76,18 @@ def check(root, online_url="", tools=None, test=None):
         if not (deployment / "部署说明.md").is_file():
             errors.append("本地部署缺少部署说明.md")
         warnings.append("本地部署实际启动与人工环节需按说明验收")
+    deck_pdf = root / "03_展示稿.pdf"
+    if deck_pdf.is_file():
+        try:
+            from pypdf import PdfReader
+            reader = PdfReader(deck_pdf)
+            checks["03_展示稿.pdf"] = {"pages": len(reader.pages)}
+            if not len(reader.pages):
+                errors.append("展示稿PDF无页面")
+        except ImportError:
+            warnings.append("未安装pypdf，展示稿PDF页数未验证")
+        except Exception as exc:
+            errors.append(f"展示稿PDF无法解析（{type(exc).__name__}）")
     for name in ["03_展示稿.pptx", "07_技术题/技术题报告.pptx"]:
         if (root / name).is_file():
             try:

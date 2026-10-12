@@ -4,13 +4,9 @@
 
 ## 怎么开始
 
-```bash
-# Windows
-start_harness.bat
-```
+Windows 双击 `start_harness.bat`；Linux 或 macOS 执行：
 
 ```bash
-# Linux / macOS
 bash start_harness.sh
 ```
 
@@ -18,17 +14,18 @@ bash start_harness.sh
 
 ## 当前状态
 
-- 已核对案例：绿的谐波 2024 年年度报告（13 页公开披露文本）。
-- 财务提取有逐字引用锚定与报表口径校验；同一份原件两轮对比的收据见 `05_技术证据/本轮口径修复_20261012/`。
-- Windows 11 一键启动已实际验收；Linux 未在真机验证。
-- 真人试用、CSMAR 正式字段定义、四条待证技术声明仍待补齐。
+- 已验证案例：绿的谐波（688017）2024 年年度报告，13 页。两轮实测对照见 [README](README.md#真实运行结果2024-年年度报告688017)。
+- 财务提取具备逐字引用锚定与报表口径校验，收据在 `deliverables/semifinal_20261012/` 的提交包内。
+- Windows 11 一键启动已实际验收；Linux 提供同一套脚本，未在真机验证。
 
-## 文档与入口
+## 主要文档
 
-- 产品操作与教程：[docs/harness/getting_started.md](docs/harness/getting_started.md)、[docs/harness/industry_workflow.md](docs/harness/industry_workflow.md)
-- 设计说明汇总：[docs/harness/design-notes.md](docs/harness/design-notes.md)
-- 数据说明汇总：[docs/harness/data-notes.md](docs/harness/data-notes.md)
-- 历次开发记录：[docs/CHANGELOG.md](docs/CHANGELOG.md)
-- 初赛版本的本地 Demo 仍在仓库根目录（`app.py`、`start_demo.*`），不是当前入口；冻结的技术题见 `deliverables/` 下的提交包。
+- [README](README.md) — 项目概览、核心机制与真实运行结果
+- [入门教程](docs/harness/getting_started.md) / [产业研究工作流](docs/harness/industry_workflow.md)
+- [模型连接](docs/harness/model-connections.md) / [资料目录](docs/harness/announcement_catalog.md)
+- [开发记录](docs/CHANGELOG.md)
+- [协作约定](CONTRIBUTING.md)
+
+初赛版本的本地 Demo 仍在仓库根目录（`app.py`、`start_demo.*`），不是当前入口；冻结的技术题见提交包内的 `07_技术题/`。
 
 商业数据库原始导出、校园账号与密钥留在授权私有目录，不进入本仓库与提交包。

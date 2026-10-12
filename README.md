@@ -2,7 +2,7 @@
 
 面向机器人产业链研究的本地工作台。把企业技术表述、公告原文、口径检查和工程到财务的假设放在同一处，让每一步都能回到原始出处。
 
-**3 分钟快速开始**：Windows 双击 `start_harness.bat`，浏览器打开 http://127.0.0.1:8510
+**快速开始**：Windows 双击 `start_harness.bat`，浏览器打开 http://127.0.0.1:8510
 
 ## 这个工具解决什么
 
@@ -56,17 +56,20 @@ src/financial_intake.py       财务长表接收与校验（16 列口径）
 src/state_verifier.py         数值与单位校验规则
 scripts/                      启动、打包、材料生成与检查工具
 tests/                        回归测试
-docs/harness/                 操作说明与设计记录
+docs/harness/                 操作说明
+docs/report/                  项目说明与展示稿的 LaTeX 源文件
 docs/CHANGELOG.md             历次开发记录
 deliverables/                 提交材料与部署包
-app.py                       初赛版本地 Demo（保留，非当前入口）
+app.py                        初赛版本地 Demo（保留，非当前入口）
 ```
 
 ## 文档
 
 - [入门教程](docs/harness/getting_started.md) — 第一次怎么用
 - [产业研究工作流](docs/harness/industry_workflow.md) — 完整操作路径
-- [准备工作与设计记录](docs/harness/README.md)
+- [模型连接](docs/harness/model-connections.md) — 接口配置与地址示例
+- [资料目录](docs/harness/announcement_catalog.md) — 检索与原件准备
+- [真实案例](docs/harness/real-cases/README.md) — 公开案例的核对记录
 - [开发记录](docs/CHANGELOG.md)
 
 ## 协作

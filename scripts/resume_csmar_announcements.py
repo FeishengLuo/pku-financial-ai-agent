@@ -56,7 +56,7 @@ def preview(root):
         for row in read_json(path).get("rows", []):
             if row.get("SecurityTypeID") == "P50100":
                 target_dates[str(row["AnnouncementID"])] = row["DeclareDate"]
-    with (root / "derived/codex_review/announcement_resume_jobs.csv").open(encoding="utf-8-sig", newline="") as handle:
+    with (root / "derived/source_review/announcement_resume_jobs.csv").open(encoding="utf-8-sig", newline="") as handle:
         jobs = list(csv.DictReader(handle))
     requests, seen = [], set()
     for job in jobs:
